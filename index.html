@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#ffffff">
+<meta name="mobile-web-app-capable" content="yes">
+<title>MYO — Gestión de Pedidos</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="PedidosChef">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#f8f8f6;
+  --card:#ffffff;
+  --card2:#f2f2f0;
+  --b:#e0e0dc;
+  --b2:#d0d0cc;
+  --a:#b8860b;
+  --a2:#8b6508;
+  --t:#1a1a1a;
+  --t2:#444440;
+  --d:#888880;
+  --r:#c0392b;
+  --g:#27ae60;
+  --myo:#c0392b;
+  --sel:#fffbf0;
+  --sel-b:#c8a020;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--t);font-family:'DM Mono',monospace;min-height:100vh;font-size:16px}
+
+/* HEADER */
+header{background:#fff;border-bottom:2px solid var(--t);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 0 var(--b)}
+.logo-myo{font-family:'Noto Serif JP',serif;font-size:2rem;font-weight:600;color:var(--myo);line-height:1;letter-spacing:.02em}
+.logo-sub{font-size:.58rem;color:var(--d);letter-spacing:.2em;text-transform:uppercase;margin-top:2px}
+.hd{text-align:right}
+.hd strong{color:var(--a2);display:block;font-size:.73rem;font-weight:500}
+.hd span{font-size:.6rem;color:var(--d)}
+
+/* LOCAL BAR */
+.local-bar{background:var(--t);padding:8px 18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.local-name{font-size:.7rem;color:#fff;letter-spacing:.1em;font-weight:500}
+.local-addr{font-size:.6rem;color:#aaa;margin-left:auto}
+
+main{padding:14px;max-width:960px;margin:0 auto}
+
+/* SEARCH */
+.prov-send-item{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border:1.5px solid var(--b);border-radius:6px;margin-bottom:6px;background:#fff}
+.prov-send-info{display:flex;flex-direction:column;gap:2px}
+.prov-send-name{font-size:.83rem;color:var(--t);font-weight:500}
+.prov-send-cnt{font-size:.62rem;color:var(--d)}
+.prov-send-estado{font-size:.65rem;padding:4px 10px;border-radius:3px;font-weight:500}
+.prov-send-estado.pendiente{background:#f0f0ee;color:var(--d)}
+.prov-send-estado.enviado{background:#e8f5e9;color:#27ae60}
+.prov-send-estado.actual{background:#fff8e1;color:#b8860b;border:1px solid #c8a020}
+.unidad-btn{padding:8px 14px;border:1.5px solid var(--b2);background:#fff;color:var(--t);font-family:'DM Mono',monospace;font-size:.72rem;cursor:pointer;border-radius:5px;transition:all .15s}
+.unidad-btn.sel{background:var(--t);color:#fff;border-color:var(--t)}
+.add-prod-btn{width:100%;padding:11px;border:1.5px dashed var(--b2);background:transparent;color:var(--d);font-family:'DM Mono',monospace;font-size:.72rem;cursor:pointer;border-radius:6px;margin-top:4px;letter-spacing:.08em;transition:all .15s}
+.add-prod-btn:active{border-color:var(--a);color:var(--a2)}
+.search-bar{position:sticky;top:97px;z-index:90;background:var(--bg);padding:8px 14px 4px;border-bottom:1px solid var(--b)}
+.search-wrap{position:relative}
+.search-inp{width:100%;background:#fff;border:1.5px solid var(--b2);color:var(--t);font-family:'DM Mono',monospace;font-size:.85rem;padding:11px 40px 11px 16px;outline:none;border-radius:6px;transition:border .15s}
+.search-inp:focus{border-color:var(--a)}
+.search-inp::placeholder{color:var(--d)}
+.search-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--d);font-size:.85rem;pointer-events:none}
+.search-clear{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:.9rem;cursor:pointer;display:none;background:none;border:none;color:var(--d)}
+
+/* SECTION LABELS */
+.sec-label{font-size:.58rem;color:var(--d);letter-spacing:.25em;text-transform:uppercase;padding:10px 2px 6px;margin-top:4px}
+
+/* ACORDEON */
+.acc{margin-bottom:6px;border:1.5px solid var(--b);border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.acc-header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;background:#fff;user-select:none;min-height:56px;transition:background .1s}
+.acc-header:active{background:var(--bg)}
+.acc-header.open{border-bottom:1.5px solid var(--b);background:#fafaf8}
+.acc-left{display:flex;align-items:center;gap:10px}
+.acc-tag{background:var(--t);color:#fff;font-size:.56rem;font-weight:600;padding:3px 8px;letter-spacing:.1em;text-transform:uppercase;flex-shrink:0;border-radius:3px}
+.acc-tag.ocas{background:var(--d);color:#fff}
+.acc-name{font-size:.88rem;color:var(--t);font-weight:500}
+.acc-count{font-size:.6rem;color:var(--d);margin-top:1px}
+.acc-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.acc-badge{font-size:.58rem;color:var(--a2);background:#fffbf0;border:1.5px solid var(--a);padding:2px 8px;border-radius:3px;white-space:nowrap;font-weight:500}
+.acc-arrow{font-size:.65rem;color:var(--d);transition:transform .2s;flex-shrink:0}
+.acc-header.open .acc-arrow{transform:rotate(180deg)}
+.acc-body{display:none}
+.acc-body.open{display:block}
+
+/* PRODUCTS */
+.pl{display:flex;flex-direction:column}
+.pr{display:flex;flex-direction:column;padding:11px 16px;background:#fff;border-bottom:1px solid var(--b);gap:8px;transition:background .1s}
+.pr:last-child{border-bottom:none}
+.pr-swipe-wrap{position:relative;overflow:hidden;background:#fff}
+.pr-delete-bg{position:absolute;right:0;top:0;bottom:0;width:72px;background:#c0392b;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.7rem;font-weight:600;letter-spacing:.04em;opacity:0;transition:opacity .15s}
+.pr-swipe-wrap.swiping .pr-delete-bg{opacity:1}
+.pr-swipe-inner{position:relative;background:#fff;transition:transform .2s ease;will-change:transform}
+.pr:active{background:var(--bg)}
+.pr.sel{background:var(--sel);border-left:3px solid var(--sel-b)}
+.pr-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.pr-name{font-size:.82rem;color:var(--t);line-height:1.35;flex:1}
+.pr-id{font-size:.55rem;color:var(--d);margin-top:2px}
+.pr-right{text-align:right;flex-shrink:0}
+.pp{font-size:.78rem;color:var(--d);font-weight:400}
+.pp.hp{color:var(--a2);font-weight:500}
+.pp-unit{font-size:.56rem;color:var(--d);margin-top:1px}
+.pr-bottom{display:flex;align-items:center;justify-content:space-between}
+.qw{display:flex;align-items:center;gap:5px}
+.qb{width:34px;height:34px;background:#fff;border:1.5px solid var(--b2);color:var(--t);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;flex-shrink:0;border-radius:5px}
+.qb:active{background:var(--t);color:#fff;border-color:var(--t)}
+.qi{width:46px;height:34px;background:var(--bg);border:1.5px solid var(--b2);color:var(--t);font-family:'DM Mono',monospace;font-size:.9rem;text-align:center;outline:none;border-radius:5px}
+.qi:focus{border-color:var(--a)}
+
+/* RESUMEN */
+.gresumen{background:#fff;border:1.5px solid var(--b);border-radius:8px;padding:16px;margin:16px 0;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.gt{font-size:.6rem;color:var(--d);letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px;padding-bottom:10px;border-bottom:1.5px solid var(--b);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pvt{background:var(--r);color:#fff;font-size:.5rem;padding:2px 7px;letter-spacing:.1em;border-radius:3px}
+.gsecs{display:flex;flex-direction:column;gap:14px;margin-bottom:14px}
+.gsec-title{font-size:.62rem;color:var(--a2);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--b);font-weight:500}
+.ritem{display:flex;justify-content:space-between;align-items:center;font-size:.74rem;padding:5px 0;border-bottom:1px solid var(--b);gap:8px;color:var(--t2)}
+.trow{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:2px solid var(--t);margin-top:6px}
+.tl{font-size:.63rem;color:var(--d);letter-spacing:.12em;text-transform:uppercase}
+.ta{font-size:1.6rem;color:var(--t);font-family:'Noto Serif JP',serif;font-weight:600}
+.tw{font-size:.6rem;color:var(--r);margin-top:3px}
+
+/* ACTIONS */
+.acts{display:flex;gap:10px;margin-bottom:24px}
+.btn{flex:1;padding:15px 12px;font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .15s;border-radius:6px;min-height:50px;font-weight:500}
+.bp{background:var(--t);color:#fff;border:none}
+.bp:active{background:#333}
+.bs{background:#fff;color:var(--d);border:1.5px solid var(--b2)}
+.bs:active{background:var(--bg);color:var(--t)}
+.emp{text-align:center;padding:20px;color:var(--d);font-size:.75rem}
+
+/* MODAL */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;align-items:flex-end;justify-content:center}
+.mo.on{display:flex}
+.mdl{background:#fff;border-top:3px solid var(--t);padding:24px 20px;width:100%;max-width:600px;animation:slideup .22s ease;border-radius:12px 12px 0 0;max-height:85vh;overflow-y:auto}
+@keyframes slideup{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mtt{font-family:'Noto Serif JP',serif;color:var(--t);font-size:1.05rem;margin-bottom:4px}
+.msb{font-size:.67rem;color:var(--d);margin-bottom:16px;line-height:1.7}
+.mlb{font-size:.6rem;color:var(--d);letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px;display:block;margin-top:14px}
+.mi{width:100%;background:var(--bg);border:1.5px solid var(--b2);color:var(--t);font-family:'DM Mono',monospace;font-size:.82rem;padding:11px 12px;outline:none;resize:none;border-radius:6px}
+.mi:focus{border-color:var(--a)}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--t);color:#fff;padding:12px 24px;font-size:.72rem;opacity:0;transition:all .3s;z-index:400;border-radius:6px;white-space:nowrap}
+.float-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,0.97);border-top:1.5px solid var(--b2);color:var(--t);display:none;align-items:center;justify-content:space-between;padding:10px 18px;z-index:350;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
+.float-bar.on{display:flex}
+.float-bar-name{font-size:.72rem;color:var(--d);letter-spacing:.06em}
+.float-bar-close{background:var(--t);color:#fff;border:none;font-family:'DM Mono',monospace;font-size:.68rem;font-weight:500;padding:8px 18px;border-radius:4px;cursor:pointer;letter-spacing:.06em;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.unit-btn{background:var(--bg);border:1.5px solid var(--b2);color:var(--d);font-family:'DM Mono',monospace;font-size:.58rem;padding:3px 8px;border-radius:3px;cursor:pointer;letter-spacing:.05em;white-space:nowrap}
+.unit-btn:active{background:var(--a);border-color:var(--a);color:#fff}
+#splash{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;transition:opacity .7s ease}
+#splash.hide{opacity:0;pointer-events:none}
+.splash-logo{font-family:'Noto Serif JP',serif;font-size:3rem;font-weight:600;color:#b8860b;letter-spacing:.06em;opacity:0;transform:translateY(18px);animation:fadeup .8s ease .2s forwards}
+.splash-sub{font-family:'DM Mono',monospace;font-size:.65rem;color:#aaa;letter-spacing:.25em;text-transform:uppercase;opacity:0;animation:fadeup .8s ease .5s forwards}
+.splash-dot{width:5px;height:5px;border-radius:50%;background:#b8860b;margin-top:8px;opacity:0;animation:pulse 1s ease .8s infinite}
+.splash-icon{margin:4px 0;opacity:0;animation:fadeup .8s ease .4s forwards}
+.splash-myo{position:absolute;bottom:48px;font-family:'Noto Serif JP',serif;font-size:1.2rem;color:#e03030;letter-spacing:.1em;opacity:0;animation:fadeup .8s ease .7s forwards}
+@keyframes fadeup{to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:.15}50%{opacity:1}}
+/* ─── LOGIN ────────────────────────────────────────────────────────────── */
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:600;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+#login-screen.on{display:flex}
+.login-logo{font-family:'Noto Serif JP',serif;font-size:2rem;color:#b8860b;margin-bottom:6px}
+.login-sub{font-size:.62rem;color:var(--d);letter-spacing:.2em;text-transform:uppercase;margin-bottom:32px}
+.login-form{width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px}
+.login-inp{width:100%;background:#fff;border:1.5px solid var(--b2);color:var(--t);font-family:'DM Mono',monospace;font-size:.88rem;padding:13px 16px;outline:none;border-radius:6px}
+.login-inp:focus{border-color:var(--a)}
+.login-btn{width:100%;background:var(--t);color:#fff;border:none;font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;padding:15px;border-radius:6px;cursor:pointer;margin-top:4px}
+.login-btn:active{background:#333}
+.login-err{font-size:.68rem;color:var(--r);text-align:center;min-height:20px}
+
+/* ─── MENÚ ─────────────────────────────────────────────────────────────── */
+.menu-btn{background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--t);padding:4px 6px;line-height:1}
+.menu-panel{display:none;position:fixed;top:60px;right:12px;background:#fff;border:1.5px solid var(--b);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:300;min-width:180px;overflow:hidden}
+.menu-panel.on{display:block}
+.menu-item{display:block;width:100%;padding:13px 18px;font-family:'DM Mono',monospace;font-size:.78rem;color:var(--t);background:none;border:none;text-align:left;cursor:pointer;border-bottom:1px solid var(--b)}
+.menu-item:last-child{border-bottom:none}
+.menu-item:active{background:var(--bg)}
+.menu-item.danger{color:var(--r)}
+
+/* ─── STOCK ─────────────────────────────────────────────────────────────── */
+#stock-panel{display:none;position:fixed;inset:0;background:var(--bg);z-index:250;overflow-y:auto}
+#stock-panel.on{display:block}
+.stock-header{background:#fff;border-bottom:2px solid var(--t);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.stock-title{font-family:'Noto Serif JP',serif;font-size:1rem;color:var(--t)}
+.stock-close{background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--t)}
+.stock-content{padding:14px;max-width:960px;margin:0 auto}
+.stock-semana{font-size:.6rem;color:var(--d);letter-spacing:.2em;text-transform:uppercase;padding:8px 2px;margin-top:8px}
+.stock-item{background:#fff;border:1.5px solid var(--b);border-radius:6px;padding:12px 14px;margin-bottom:6px;display:flex;flex-direction:column;gap:10px}
+.stock-item-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.stock-item-info{flex:1}
+.stock-item-name{font-size:.8rem;color:var(--t)}
+.stock-item-prov{font-size:.6rem;color:var(--d);margin-top:2px}
+.stock-item-controls{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.stock-qrow{display:flex;align-items:center;gap:6px}
+.stock-qb{width:40px;height:40px;background:var(--bg);border:1.5px solid var(--b2);color:var(--t);font-size:1.3rem;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;touch-action:manipulation}
+.stock-qb:active{background:var(--t);color:#fff}
+.stock-qi{width:56px;height:40px;background:#fff;border:1.5px solid var(--b2);color:var(--t);font-family:'DM Mono',monospace;font-size:.88rem;text-align:center;outline:none;border-radius:6px}
+.stock-pedido{font-size:.58rem;color:var(--d)}
+.stock-bar-wrap{width:100%;height:5px;background:var(--b);border-radius:3px;overflow:hidden}
+.stock-bar{height:100%;border-radius:3px;transition:width .3s ease}
+.stock-reset-btn{width:100%;padding:13px;background:transparent;border:1.5px solid var(--b2);color:var(--d);font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;border-radius:6px;cursor:pointer;margin-top:16px}
+.stock-empty{text-align:center;padding:40px;color:var(--d);font-size:.75rem}
+.stock-seccion{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--t);padding:10px 2px 4px;margin-top:8px;border-bottom:1.5px solid var(--t)}
+</style>
+<body>
+<div id="splash">
+  <div class="splash-logo">PedidosChef</div>
+  <div class="splash-icon">
+    <svg width="56" height="56" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Tenedor izquierda, inclinado -->
+      <g transform="rotate(-25, 19, 19)">
+        <rect x="10" y="4" width="2" height="18" rx="1" fill="#b8860b"/>
+        <rect x="7" y="4" width="1.2" height="8" rx="0.6" fill="#b8860b"/>
+        <rect x="13" y="4" width="1.2" height="8" rx="0.6" fill="#b8860b"/>
+        <rect x="10" y="22" width="2" height="10" rx="1" fill="#b8860b"/>
+      </g>
+      <!-- Cuchillo derecha, inclinado -->
+      <g transform="rotate(25, 19, 19)">
+        <rect x="26" y="4" width="2" height="28" rx="1" fill="#b8860b"/>
+        <path d="M28 4 Q32 8 28 16" fill="#b8860b"/>
+      </g>
+    </svg>
+  </div>
+  <div class="splash-sub">Gestión de pedidos</div>
+  <div class="splash-dot"></div>
+  <div class="splash-myo">MYO HANDROLL BAR</div>
+</div>
+<header>
+  <div><div class="logo-myo">MYO</div><div class="logo-sub">Gestión de Pedidos</div></div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="hd"><strong id="td">—</strong><span>Entrega solicitada</span></div>
+    <button class="menu-btn" onclick="toggleMenu()">⋮</button>
+  </div>
+</header>
+<div class="local-bar">
+  <span class="local-name">MYO HANDROLL BAR</span>
+  <span class="local-addr">García de Paredes 63, Madrid</span>
+</div>
+<div class="search-bar">
+  <div class="search-wrap">
+    <input class="search-inp" id="search" type="text" placeholder="Buscar producto..." oninput="doSearch(this.value)" autocomplete="off">
+    <span class="search-icon" id="sicon">🔍</span>
+    <button class="search-clear" id="sclear" onclick="clearSearch()">✕</button>
+  </div>
+</div>
+<main>
+  <div id="proveedores"></div>
+  <div class="gresumen">
+    <div class="gt">Resumen del pedido <span class="pvt">🔒 SOLO TÚ</span></div>
+    <div class="gsecs" id="gsecs"><div class="emp">Añade productos para ver el resumen</div></div>
+    <div class="trow">
+      <div><div class="tl">Coste Total Estimado</div><div class="tw" id="tw"></div></div>
+      <div class="ta" id="ta">0,00 €</div>
+    </div>
+  </div>
+  <div class="acts">
+    <button class="btn bs" onclick="rst()">Limpiar</button>
+    <button class="btn bp" onclick="openM()">Generar Pedido →</button>
+  </div>
+</main>
+
+<div class="mo" id="mo">
+  <div class="mdl">
+    <div class="mtt">Pedidos listos para enviar</div>
+    <div class="msb">Los precios NO aparecerán en los mensajes.</div>
+    <div id="prov-send-list"></div>
+    <label class="mlb">Notas para todos los proveedores (opcional)</label>
+    <textarea class="mi" id="notas" rows="2" placeholder="Ej: llamar antes de llegar..."></textarea>
+    <div class="acts" style="margin-top:16px;margin-bottom:0">
+      <button class="btn bs" onclick="closeM()">Cancelar</button>
+      <button class="btn bp" id="btn-enviar-todos" onclick="enviarSiguiente()">Enviar a todos →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NUEVO PRODUCTO -->
+<div class="mo" id="mo-nuevo">
+  <div class="mdl">
+    <div class="mtt">Añadir nuevo producto</div>
+    <div class="msb" id="mo-nuevo-prov" style="color:var(--a2);font-weight:500"></div>
+    <label class="mlb">Nombre del producto *</label>
+    <input class="mi" id="np-nombre" type="text" placeholder="Ej: Tomate Cherry 250gr" autocomplete="off">
+    <label class="mlb">Unidad de pedido *</label>
+    <div class="unidad-grid" id="np-unidades"></div>
+    <label class="mlb">Unidad personalizada (opcional)</label>
+    <input class="mi" id="np-unidad-custom" type="text" placeholder="Ej: caja 6ud, saco 25kg...">
+    <label class="mlb">Precio (opcional — se puede añadir después)</label>
+    <input class="mi" id="np-precio" type="number" step="0.01" min="0" placeholder="0.00" inputmode="decimal">
+    <div id="np-error" style="color:var(--r);font-size:.68rem;margin-top:8px;display:none">Por favor introduce un nombre y selecciona una unidad.</div>
+    <div class="acts" style="margin-top:16px;margin-bottom:0">
+      <button class="btn bs" onclick="cerrarNuevo()">Cancelar</button>
+      <button class="btn bp" onclick="guardarNuevo()">Añadir producto</button>
+    </div>
+  </div>
+</div>
+
+<div class="float-bar" id="float-bar" ontouchstart="event.stopPropagation()">
+  <span class="float-bar-name" id="float-bar-name"></span>
+  <button class="float-bar-close" onclick="cerrarFloating()">✕ Cerrar</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-logo">PedidosChef</div>
+  <div class="login-sub">Acceso seguro</div>
+  <div class="login-form">
+    <input class="login-inp" id="login-email" type="email" placeholder="Email" autocomplete="email">
+    <input class="login-inp" id="login-pass" type="password" placeholder="Contraseña" autocomplete="current-password">
+    <div class="login-err" id="login-err"></div>
+    <button class="login-btn" onclick="doLogin()">Entrar →</button>
+  </div>
+</div>
+
+<!-- STOCK PANEL -->
+<div id="stock-panel">
+  <div class="stock-header">
+    <div class="stock-title">📦 Stock semanal</div>
+    <button class="stock-close" onclick="cerrarStock()">✕</button>
+  </div>
+  <div class="stock-content" id="stock-content"></div>
+</div>
+
+<!-- MENU DESPLEGABLE -->
+<div class="menu-panel" id="menu-panel">
+  <button class="menu-item" onclick="abrirStock()">📦 Ver stock</button>
+  <button class="menu-item" onclick="abrirRestaurar();document.getElementById('menu-panel').classList.remove('on')">↩️ Restaurar ocultos</button>
+  <button class="menu-item danger" onclick="doLogout()">Cerrar sesión</button>
+</div>
+
+<!-- MODAL EDITOR PRODUCTO -->
+<div class="mo" id="mo-editor">
+  <div class="mdl">
+    <div class="mtt">Editar producto</div>
+    <input type="hidden" id="ed-provid">
+    <input type="hidden" id="ed-prodid">
+    <label class="mlb">Nombre</label>
+    <input class="mi" id="ed-nombre" type="text" autocomplete="off">
+    <label class="mlb">Precio (€)</label>
+    <input class="mi" id="ed-precio" type="number" step="0.01" min="0" placeholder="0.00" inputmode="decimal">
+    <div class="acts" style="margin-top:16px;margin-bottom:0;gap:8px;flex-wrap:wrap">
+      <button class="btn bs" onclick="cerrarEditor()">Cancelar</button>
+      <button class="btn bp" onclick="guardarEditor()">Guardar</button>
+    </div>
+    <button id="ed-borrar" onclick="borrarProductoEditor()" style="display:none;width:100%;margin-top:10px;background:none;border:1px solid var(--r);color:var(--r);border-radius:4px;padding:8px;font-size:.72rem;cursor:pointer;font-family:'DM Mono',monospace">Eliminar producto</button>
+  </div>
+</div>
+
+<!-- MODAL RESTAURAR PRODUCTOS -->
+<div class="mo" id="mo-restaurar">
+  <div class="mdl" style="max-height:80vh;display:flex;flex-direction:column">
+    <div class="mtt">Productos ocultos</div>
+    <div id="restaurar-lista" style="overflow-y:auto;flex:1;margin:12px 0"></div>
+    <div class="acts" style="margin-top:8px;margin-bottom:0;gap:8px;flex-wrap:wrap">
+      <button class="btn bs" onclick="cerrarRestaurar()">Cerrar</button>
+      <button class="btn bp" id="btn-restaurar-todos" onclick="restaurarTodos()">Restaurar todos</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+// ── 1. PROVEEDORES Y PRODUCTOS ──────────────────────────────────────────────
+// p = precio por unidad de pedido
+// nota = '/kg' o '/l' cuando el precio es por peso (carnicería/pescadería/frutas)
+const PROVEEDORES=[
+  // ═══════════════════════════════ DIARIOS ═══════════════════════════════
+  {id:'food',nombre:'+FOOD',comercial:'+food',wa:'34692951891',tipo:'diario',productos:[
+    {id:'FOOD_001',n:'CARNE DE VIERA SIN CORAL',u:'kg',p:31.5,nota:'/kg'},
+    {id:'FOOD_002',n:'DORADA 1,5/2 KG',u:'kg',p:14.65,nota:'/kg'},
+    {id:'FOOD_004',n:'LOMO ATUN FRESCO VIVERO',u:'kg',p:35.0,nota:'/kg'},
+    {id:'FOOD_005',n:'LUBINA 2/3',u:'ud',p:18.9,nota:''},
+    {id:'FOOD_006',n:'LUBINA 3/4',u:'ud',p:21.9,nota:''},
+    {id:'FOOD_007',n:'SALMON 5/6',u:'kg',p:12.5,nota:'/kg'},
+    {id:'FOOD_008',n:'SALMON 6/7',u:'kg',p:12.5,nota:'/kg'},
+    {id:'FOOD_009',n:'VENTRESCA ATUN ROJO',u:'kg',p:44.0,nota:'/kg'},
+  ]},
+  {id:'frutaseloy',nombre:'FRUTAS ELOY',comercial:'frutas eloy',wa:'34687466464',tipo:'diario',productos:[
+    {id:'FRUT_001',n:'ACEITE GIRASOL 5 L',u:'garrafa 5l',p:11.1,nota:''},
+    {id:'FRUT_062',n:'Aguacate',u:'ud',p:6.0,nota:''},
+    {id:'FRUT_002',n:'AJO BLANCO EXTRA',u:'kg',p:5.54,nota:'/kg'},
+    {id:'FRUT_003',n:'AJO EXTRA PELADO',u:'kg',p:6.62,nota:'/kg'},
+    {id:'FRUT_004',n:'ALBAHACA MANOJO 100 GRS',u:'manojo',p:1.49,nota:''},
+    {id:'FRUT_005',n:'ALCAPARRAS BOTE 1,7 KG',u:'bote',p:18.75,nota:''},
+    {id:'FRUT_006',n:'ALCAPARRAS BOTE 250 GRS',u:'bote',p:3.75,nota:''},
+    {id:'FRUT_007',n:'APIO VERDE',u:'kg',p:1.46,nota:'/kg'},
+    {id:'FRUT_008',n:'AZUCAR BLANCO 1 KG',u:'bolsa 1kg',p:1.17,nota:''},
+    {id:'FRUT_009',n:'BATATA NARANJA',u:'kg',p:1.58,nota:'/kg'},
+    {id:'FRUT_010',n:'BONIATO BLANCO',u:'kg',p:3.1,nota:'/kg'},
+    {id:'FRUT_011',n:'BROCOLI',u:'kg',p:3.14,nota:'/kg'},
+    {id:'FRUT_012',n:'BROTES DE CILANTRO 15GR',u:'bandeja 15gr',p:3.76,nota:''},
+    {id:'FRUT_013',n:'CALABAZA',u:'kg',p:1.0,nota:'/kg'},
+    {id:'FRUT_014',n:'CEBOLLA GORDA CAL. 3',u:'kg',p:1.07,nota:'/kg'},
+    {id:'FRUT_015',n:'CEBOLLA MORADA',u:'kg',p:1.32,nota:'/kg'},
+    {id:'FRUT_016',n:'CEBOLLETA BLANCA',u:'manojo',p:1.82,nota:''},
+    {id:'FRUT_063',n:'Cebolleta China',u:'kg',p:2.48,nota:'/kg'},
+    {id:'FRUT_017',n:'CEBOLLINO MANOJO 100 GRS',u:'manojo 100gr',p:2.25,nota:''},
+    {id:'FRUT_018',n:'CHILE JALAPEÑO',u:'kg',p:4.54,nota:'/kg'},
+    {id:'FRUT_019',n:'CILANTRO MANOJO 100 GRS',u:'manojo',p:1.4,nota:''},
+    {id:'FRUT_020',n:'COBERTURA CHOCOLATE 70% 2,5kg',u:'bolsa 2,5kg',p:75.08,nota:''},
+    {id:'FRUT_021',n:'COGOLLOS DE TUDELA 3 PIEZAS',u:'pack 3 ud',p:0.5,nota:''},
+    {id:'FRUT_022',n:'COL CHINA',u:'kg',p:2.24,nota:'/kg'},
+    {id:'FRUT_023',n:'COLIFLOR EXTRA',u:'ud',p:2.24,nota:''},
+    {id:'FRUT_024',n:'ESPINACA BOLSA 300 GRS',u:'bolsa 300gr',p:2.13,nota:''},
+    {id:'FRUT_025',n:'FLOR PENSAMIENTO',u:'bandeja',p:4.24,nota:''},
+    {id:'FRUT_026',n:'GARBANZO COCIDO LATA 2,5 KG',u:'lata 2,5kg',p:2.99,nota:''},
+    {id:'FRUT_027',n:'HOJA DE SHISO ROJO',u:'bandeja',p:5.01,nota:''},
+    {id:'FRUT_028',n:'HOJA DE SHISO VERDE',u:'ud',p:0.33,nota:''},
+    {id:'FRUT_029',n:'HUEVOS L',u:'docena',p:4.07,nota:''},
+    {id:'FRUT_030',n:'HUEVOS M PLANCHETA 24',u:'plancheta 24ud',p:9.84,nota:''},
+    {id:'FRUT_031',n:'ICEBERG',u:'ud',p:0.97,nota:''},
+    {id:'FRUT_032',n:'JENGIBRE',u:'kg',p:3.4,nota:'/kg'},
+    {id:'FRUT_033',n:'LECHUGA BATAVIA',u:'ud',p:1.66,nota:''},
+    {id:'FRUT_034',n:'LECHUGA ROMANA EMBOLSADA',u:'bolsa',p:2.16,nota:''},
+    {id:'FRUT_035',n:'LIMA',u:'kg',p:4.54,nota:'/kg'},
+    {id:'FRUT_036',n:'LIMON EXTRA',u:'kg',p:2.0,nota:'/kg'},
+    {id:'FRUT_037',n:'MANZANA GOLDEN EXTRA',u:'kg',p:2.56,nota:'/kg'},
+    {id:'FRUT_038',n:'MANZANA GRANNY SMITH EXTRA',u:'kg',p:2.5,nota:'/kg'},
+    {id:'FRUT_039',n:'MINI PENSAMIENTOS 20UD',u:'bandeja 20ud',p:4.2,nota:''},
+    {id:'FRUT_066',n:'PENSAMIENTO VIOLA PEQUEÑO',u:'bandeja 20 flores',p:4.5,nota:''},
+    {id:'FRUT_040',n:'NARANJA ZUMO GRANEL',u:'kg',p:1.18,nota:'/kg'},
+    {id:'FRUT_041',n:'NARANJA ZUMO IMPORTACION',u:'kg',p:1.86,nota:'/kg'},
+    {id:'FRUT_042',n:'PAMPLINA',u:'bandeja',p:6.12,nota:''},
+    {id:'FRUT_043',n:'PATATA AGRIA',u:'kg',p:0.83,nota:'/kg'},
+    {id:'FRUT_044',n:'PATATA EXTRA NUEVA',u:'kg',p:0.83,nota:'/kg'},
+    {id:'FRUT_045',n:'PATATA GRAN CONSUMO NUEVA',u:'kg',p:0.68,nota:'/kg'},
+    {id:'FRUT_064',n:'Pepino Holandés',u:'kg',p:4.35,nota:'/kg'},
+    {id:'FRUT_046',n:'PEREJIL MANOJO',u:'manojo',p:1.18,nota:''},
+    {id:'FRUT_047',n:'PIMIENTO ITALIANO VERDE',u:'kg',p:2.26,nota:'/kg'},
+    {id:'FRUT_048',n:'PIMIENTO ROJO LAMUYO EXTRA',u:'kg',p:3.65,nota:'/kg'},
+    {id:'FRUT_049',n:'PIMIENTO VERDE LAMUYO EXTRA',u:'kg',p:2.9,nota:'/kg'},
+    {id:'FRUT_050',n:'PLATANO EXTRA',u:'kg',p:2.64,nota:'/kg'},
+    {id:'FRUT_051',n:'PLATANO MACHO',u:'kg',p:2.42,nota:'/kg'},
+    {id:'FRUT_052',n:'PUERRO GORDO',u:'kg',p:1.65,nota:'/kg'},
+    {id:'FRUT_053',n:'REGAÑAS 150GR',u:'bolsa 150gr',p:0.75,nota:''},
+    {id:'FRUT_054',n:'REPOLLO EXTRA',u:'kg',p:1.09,nota:'/kg'},
+    {id:'FRUT_055',n:'SAL FINA DE MESA BOLSA 1KG',u:'bolsa 1kg',p:0.36,nota:''},
+    {id:'FRUT_056',n:'TOMATE ENSALADA LONG LIFE',u:'kg',p:2.72,nota:'/kg'},
+    {id:'FRUT_065',n:'Tomate Pera',u:'kg',p:2.11,nota:'/kg'},
+    {id:'FRUT_057',n:'YEMA LIQUIDA 1 LT',u:'botella 1l',p:14.4,nota:''},
+    {id:'FRUT_058',n:'ZANAHORIA GRANEL',u:'kg',p:1.0,nota:'/kg'},
+    {id:'FRUT_059',n:'ZUMO DE LIMA BOTELLA 1L',u:'botella 1l',p:14.5,nota:''},
+    {id:'FRUT_060',n:'ZUMO DE LIMON BOTELLA 1L',u:'botella 1l',p:6.9,nota:''},
+    {id:'FRUT_061',n:'ZUMO DE NARANJA BOTELLA 1L',u:'botella 1l',p:4.9,nota:''},
+  ]},
+  {id:'serpeska',nombre:'SERPESKA',comercial:'serpeska',wa:'34647308014',tipo:'diario',productos:[
+    {id:'SERP_001',n:'CARNE VIEIRA SIN CORAL',u:'kg',p:39.5,nota:'/kg'},
+    {id:'SERP_002',n:'ERIZOS',u:'ud',p:21.5,nota:''},
+    {id:'SERP_003',n:'HUESOS DE RAPE',u:'bolsa 3kg',p:20.25,nota:''},
+    {id:'SERP_004',n:'HUEVAS TRUCHA 100 GR',u:'tarro 100gr',p:3.25,nota:''},
+    {id:'SERP_004b',n:'HUEVAS DE TRUCHA 340 GR',u:'bote 340gr',p:29.4,nota:''},
+    {id:'SERP_005',n:'LANGOSTINO AUSTRAL 20/30',u:'kg',p:12.0,nota:'/kg'},
+    {id:'SERP_006',n:'LUBINA 2-3',u:'ud',p:22.75,nota:''},
+    {id:'SERP_007',n:'LUBINA 2-3 LOMOS S/C',u:'ud',p:22.75,nota:''},
+    {id:'SERP_008',n:'Hamashi 2.2 x 1',u:'ud',p:23.5,nota:''},
+    {id:'SERP_010',n:'QUESO GRANA PADANO 12m aprox 1kg',u:'kg',p:18.85,nota:'/kg'},
+    {id:'SERP_011',n:'SALMON 2.2 LOMOS',u:'ud',p:11.5,nota:''},
+    {id:'SERP_014',n:'VIEIRA ARGENT XXS bolsa 2kg',u:'bolsa 2kg',p:78.8,nota:''},
+  ]},
+  {id:'tokyoya',nombre:'TOKYO YA',comercial:'tokyo ya',wa:'34685478629',tipo:'diario',horaCorte:16.5,productos:[    {id:'TOKY_002',n:'Aka Miso 1kg Hanamaruki',u:'bolsa 1kg',p:2.8,nota:''},
+    {id:'TOKY_031',n:'Arroz Hitomebore blend 10kg',u:'saco 10kg',p:41.5,nota:''},
+    {id:'TOKY_003',n:'Bubu Arare 500G',u:'bolsa 500gr',p:45.0,nota:''},
+    {id:'TOKY_004',n:'Dashi No Moto 2x500g Marutomo',u:'pack 1kg',p:10.98,nota:''},
+    {id:'TOKY_005',n:'Ebi Fry 2L 25gr x10uds',u:'bandeja 10ud',p:3.2,nota:''},
+    {id:'TOKY_006',n:'Hon Mirin Kappo 1L',u:'botella 1l',p:6.99,nota:''},
+    {id:'TOKY_007',n:'Itacho Shiro Miso blanco 1kg',u:'bolsa 1kg',p:2.8,nota:''},
+    {id:'TOKY_008',n:'Kagoshima Wagyu Striploin A5',u:'kg',p:118.0,nota:'/kg'},
+    {id:'TOKY_009',n:'Katakuriko (almidón patata) 1kg',u:'bolsa 1kg',p:2.68,nota:''},
+    {id:'TOKY_010',n:'Kikkoman Gluten Free Shoyu 1L',u:'botella 1l',p:5.51,nota:''},
+    {id:'TOKY_011',n:'Kimuchi Sauce 1,2kg Taikoban',u:'bote 1,2kg',p:9.38,nota:''},
+    {id:'TOKY_012',n:'Koshihikari Arroz 5kg Toyama',u:'saco 5kg',p:31.5,nota:''},
+    {id:'TOKY_013',n:'Kuro Su Vinagre negro 150ml',u:'botella 150ml',p:3.3,nota:''},
+    {id:'TOKY_014',n:'Mayonesa Kewpie 2,4L S/Gluten',u:'bote 2,4l',p:28.78,nota:''},
+    {id:'TOKY_015',n:'Mochi Helado Vainilla 192G 6pc',u:'pack 6ud',p:5.65,nota:''},
+    {id:'TOKY_032',n:'Nabo Takuwan 500gr',u:'pack 500gr',p:3.5,nota:''},
+    {id:'TOKY_016',n:'Nama Wasabi 505 750G',u:'tubo 750gr',p:17.99,nota:''},
+    {id:'TOKY_017',n:'Panko Baishoshiki 1KG',u:'bolsa 1kg',p:5.8,nota:''},
+    {id:'TOKY_018',n:'Sapporo Lager 330ml',u:'ud',p:0.9,nota:''},
+    {id:'TOKY_019',n:'Shichimi Togarashi Amari 300G',u:'bote 300gr',p:5.45,nota:''},
+    {id:'TOKY_020',n:'Shiro Miso 1kg Hanamaruki',u:'bolsa 1kg',p:2.58,nota:''},
+    {id:'TOKY_021',n:'Snow Crab Meat 380G',u:'pack 380gr',p:13.5,nota:''},
+    {id:'TOKY_022',n:'Soba Sarashina 600gr',u:'pack 600gr',p:4.68,nota:''},
+    {id:'TOKY_023',n:'Taberu Layu 800G',u:'bote 800gr',p:26.3,nota:''},
+    {id:'TOKY_024',n:'Takuan Ipponzuke Nabo 350G',u:'pack 350gr',p:3.98,nota:''},
+    {id:'TOKY_025',n:'Tenkasu Kotsubu 1kg',u:'bolsa 1kg',p:11.98,nota:''},
+    {id:'TOKY_026',n:'Ventresca Bluefin Vivero',u:'kg',p:40.0,nota:'/kg'},
+    {id:'TOKY_027',n:'Yakinori Gold 50 Hojas 200G',u:'pack 50hj',p:34.8,nota:''},
+
+    {id:'TOKY_001',n:'Yakinori Premium 50 Hojas 200G',u:'pack 50hj',p:61.0,nota:''},
+    {id:'TOKY_028',n:'Yakinori Setouchi Premium 50hj',u:'pack 50hj',p:43.8,nota:''},
+    {id:'TOKY_030',n:'Yuzu Kajyu 1,8L Kishida',u:'botella 1,8l',p:56.5,nota:''},
+    {id:'TOKY_029',n:'Yuzu Kajyu 150ml Kishida',u:'botella 150ml',p:5.8,nota:''},
+  ]},
+  {id:'leikan',nombre:'LEIKAN',comercial:'leikan',wa:'34646413185',tipo:'diario',productos:[
+    {id:'LEIK_001',n:'ALITAS POLLO',u:'kg',p:4.65,nota:'/kg'},
+    {id:'LEIK_002',n:'BACON LONCHAS',u:'kg',p:8.5,nota:'/kg'},
+    {id:'LEIK_003',n:'CADERA VACA',u:'kg',p:11.5,nota:'/kg'},
+    {id:'LEIK_004',n:'CARCASAS POLLO',u:'kg',p:1.35,nota:'/kg'},
+    {id:'LEIK_005',n:'CHULETA SAJONIA',u:'kg',p:6.35,nota:'/kg'},
+    {id:'LEIK_007',n:'CHULETA VACA MADURADA',u:'kg',p:26.9,nota:'/kg'},
+    {id:'LEIK_006',n:'CHULETAS CERDO CENTRO',u:'kg',p:5.65,nota:'/kg'},
+    {id:'LEIK_008',n:'CODILLO SERRANO',u:'kg',p:2.95,nota:'/kg'},
+    {id:'LEIK_009',n:'CONTRAMUSLO POLLO',u:'kg',p:6.35,nota:'/kg'},
+    {id:'LEIK_010',n:'COSTILLAR CERDO',u:'kg',p:8.35,nota:'/kg'},
+    {id:'LEIK_011',n:'COSTILLAS ADOBADA',u:'kg',p:7.8,nota:'/kg'},
+    {id:'LEIK_012',n:'ENTRAÑA BLACK ANGUS',u:'kg',p:23.3,nota:'/kg'},
+    {id:'LEIK_013',n:'FILETES AGUJA CERDO',u:'kg',p:6.2,nota:'/kg'},
+    {id:'LEIK_014',n:'FILETES AÑOJO TAPA HEMBRA',u:'kg',p:14.9,nota:'/kg'},
+    {id:'LEIK_015',n:'GRASA VACA',u:'kg',p:2.5,nota:'/kg'},
+    {id:'LEIK_016',n:'HAMBURGUESA VACA 220GR',u:'ud 220gr',p:2.9,nota:''},
+    {id:'LEIK_017',n:'HUESOS RODILLA',u:'kg',p:1.5,nota:'/kg'},
+    {id:'LEIK_018',n:'HUESOS TERNERA',u:'kg',p:1.5,nota:'/kg'},
+    {id:'LEIK_019',n:'PANCETA CERDO',u:'kg',p:6.5,nota:'/kg'},
+    {id:'LEIK_020',n:'PATAS POLLO',u:'kg',p:2.9,nota:'/kg'},
+    {id:'LEIK_021',n:'PICADA MIXTA',u:'kg',p:10.4,nota:'/kg'},
+    {id:'LEIK_022',n:'PICADA VACUNO',u:'kg',p:9.9,nota:'/kg'},
+    {id:'LEIK_023',n:'SECRETO CERDO IBERICO',u:'kg',p:23.9,nota:'/kg'},
+    {id:'LEIK_024',n:'SOLOMILLO VACA +3',u:'kg',p:28.9,nota:'/kg'},
+    {id:'LEIK_025',n:'TOCINO CERDO',u:'kg',p:2.9,nota:'/kg'},
+    {id:'LEIK_026',n:'TOCINO IBERICO SALADO',u:'kg',p:3.9,nota:'/kg'},
+    {id:'LEIK_027',n:'TRASERAS POLLO',u:'kg',p:3.95,nota:'/kg'},
+  ]},
+  {id:'prodesco',nombre:'PRODESCO',comercial:'prodesco',email:'Pedidos@grupoprodesco.com',tipo:'diario',diasEntrega:[2,4],horaCorte:24,productos:[
+    {id:'PROD_001',n:'ACEITE GIRASOL ALTO OLEICO 80% 5l',u:'garrafa 5l',p:11.4,nota:''},
+    {id:'PROD_002',n:'ACEITE OLIVA SUAVE 5l',u:'garrafa 5l',p:21.95,nota:''},
+    {id:'PROD_003',n:'ACEITE OLIVA VIRGEN EXTRA 5l',u:'garrafa 5l',p:27.95,nota:''},
+    {id:'PROD_004',n:'ACEITUNA VERDE RELLENA ANCHOA 4,4kg',u:'lata 4,4kg',p:0.09,nota:''},
+    {id:'PROD_005',n:'AGAR AGAR 400gr',u:'cubo 400gr',p:20.78,nota:''},
+    {id:'PROD_006',n:'AJO MOLIDO FINO 700gr',u:'tarro 700gr',p:5.7,nota:''},
+    {id:'PROD_009',n:'ANCHOA ARRANAUK Tarrina 65-70 lomos 605gr',u:'tarrina',p:25.9,nota:''},
+    {id:'PROD_010',n:'ATUN CLARO EN ACEITE Lata ~900gr',u:'lata',p:26.88,nota:''},
+    {id:'PROD_050',n:'Azúcar Blanco',u:'kg',p:0.99,nota:'/kg'},
+    {id:'PROD_011',n:'BOLSA VACIO 20X30 cm 100uds',u:'pack 100ud',p:7.86,nota:''},
+    {id:'PROD_012',n:'BOLSA VACIO 30X40 cm 100uds',u:'pack 100ud',p:15.75,nota:''},
+    {id:'PROD_013',n:'CAFE MOLIDO NATURAL 6x500gr Marcilla',u:'pack 6ud',p:57.2,nota:''},
+    {id:'PROD_014',n:'CARGA DE SIFON 24uds',u:'estuche 24ud',p:12.79,nota:''},
+    {id:'PROD_015',n:'CEBOLLA FRITA 500gr',u:'bolsa 500gr',p:3.09,nota:''},
+    {id:'PROD_016',n:'COBERTURA CHOCOLATE NEGRO 70,5% 2,5kg',u:'bolsa 2,5kg',p:59.69,nota:''},
+    {id:'PROD_017',n:'COMINO MOLIDO 700gr',u:'tarro 700gr',p:7.91,nota:''},
+    {id:'PROD_018',n:'ENELDO HOJA EXTRA 280gr',u:'tarro 280gr',p:5.09,nota:''},
+    {id:'PROD_019',n:'ESPAGUETTI 105 500gr Felicetti',u:'bolsa 500gr',p:1.4,nota:''},
+    {id:'PROD_020',n:'GARBANZO EXTRA COCIDO 3kg',u:'lata 3kg',p:3.48,nota:''},
+    {id:'PROD_021',n:'GUANTES NITRILO T/GRANDE 100ud',u:'caja 100ud',p:3.55,nota:''},
+    {id:'PROD_022',n:'GUANTES NITRILO T/MEDIANA 100ud',u:'caja 100ud',p:3.45,nota:''},
+    {id:'PROD_023',n:'GUANTES NITRILO T/PEQUEÑA 100ud',u:'caja 100ud',p:3.55,nota:''},
+    {id:'PROD_024',n:'HARINA DE TRIGO 1kg',u:'bolsa 1kg',p:0.95,nota:''},
+    {id:'PROD_025',n:'LAUREL HOJAS 80gr',u:'tarro 80gr',p:1.9,nota:''},
+    {id:'PROD_026',n:'LAVAVAJILLAS Bidon 5l Fairy',u:'bidon 5l',p:11.32,nota:''},
+    {id:'PROD_027',n:'LECHE ENTERA 1l Clesa',u:'brick 1l',p:1.1,nota:''},
+    {id:'PROD_028',n:'LECHE SIN LACTOSA 1l',u:'brick 1l',p:1.29,nota:''},
+    {id:'PROD_029',n:'MANGA PASTELERA 43cm 100uds',u:'rollo 100ud',p:9.11,nota:''},
+    {id:'PROD_030',n:'MANTEQUILLA 1kg Arias',u:'bloque 1kg',p:11.45,nota:''},
+    {id:'PROD_031',n:'NATA 35% UHT 1l',u:'brick 1l',p:4.09,nota:''},
+    {id:'PROD_032',n:'PAN DE MOLDE SANDWICH 800gr',u:'bolsa 800gr',p:0.06,nota:''},
+    {id:'PROD_033',n:'PAN DE MOLDE TOSTADA 800gr',u:'bolsa 800gr',p:1.45,nota:''},
+    {id:'PROD_034',n:'PAN TRAMEZZINI BLANCO 1kg',u:'bolsa 1kg',p:8.55,nota:''},
+    {id:'PROD_035',n:'PAPEL ALUMINIO 30cm 200mt',u:'rollo 200mt',p:15.79,nota:''},
+    {id:'PROD_036',n:'PAPEL FILM 30cm 300mt',u:'rollo 300mt',p:4.95,nota:''},
+    {id:'PROD_037',n:'PAPEL FILM 45cm 300mt',u:'rollo 300mt',p:7.15,nota:''},
+    {id:'PROD_038',n:'PAPEL HORNO BISILIC 40X60 500ud',u:'caja 500ud',p:23.65,nota:''},
+    {id:'PROD_039',n:'PAPEL MECHA 2 CAPAS 140mt 6ud',u:'pack 6ud',p:19.35,nota:''},
+    {id:'PROD_040',n:'PASTA DE AVELLANA 1kg',u:'cubo 1kg',p:47.33,nota:''},
+    {id:'PROD_041',n:'PIMENTON EXTRA DULCE 800gr',u:'tarro 800gr',p:5.75,nota:''},
+    {id:'PROD_042',n:'QUESO GRANA PADANO 12m aprox 1kg',u:'kg',p:18.85,nota:'/kg'},
+    {id:'PROD_043',n:'SAL ESCAMAS MARINA MALDON 1,4kg',u:'cubo 1,4kg',p:21.35,nota:''},
+    {id:'PROD_051',n:'Sal fina',u:'kg',p:0.3,nota:'/kg'},
+    {id:'PROD_044',n:'SALSA CHILI DULCE 720ml',u:'botella 720ml',p:3.11,nota:''},
+    {id:'PROD_045',n:'SALSA LEA PERRINS 150gr',u:'botella 150gr',p:3.01,nota:''},
+    {id:'PROD_046',n:'SALSA PICANTE TABASCO 150ml',u:'botella 150ml',p:6.69,nota:''},
+    {id:'PROD_047',n:'TOMATE FRITO Brik 2,1kg Orlando',u:'brik 2,1kg',p:3.7,nota:''},
+    {id:'PROD_048',n:'VIEIRA ARGENT XXS Bolsa 2kg',u:'bolsa 2kg',p:78.8,nota:''},
+    {id:'PROD_052',n:'YEMA HUEVO PASTEURIZADA',u:'kg',p:10.7,nota:'/kg'},
+    {id:'PROD_049',n:'ZANAHORIA RALLADA 3kg',u:'lata 3kg',p:2.55,nota:''},
+  ]},
+  {id:'cominport',nombre:'COMINPORT',comercial:'cominport',wa:'34678521555',tipo:'diario',diasEntrega:[2,4,6],horaCorte:16.5,productos:[
+    {id:'COMI_001',n:'ACEITE DE SÉSAMO 1,65L',u:'lata 1,65l',p:16.45,nota:''},
+    {id:'COMI_002',n:'AKA MISO 1kg Marukome',u:'bolsa 1kg',p:2.5,nota:''},
+    {id:'COMI_003',n:'AO SASA Hojas de bambú 100pzs',u:'pack 100ud',p:3.75,nota:''},
+    {id:'COMI_004',n:'CARTUCHO GAS Para Soplete',u:'ud',p:1.75,nota:''},
+    {id:'COMI_005',n:'EBI FRY 2L Bandeja 10pzs 250g',u:'bandeja 10ud',p:0.3,nota:''},
+    {id:'COMI_006',n:'EBI FRY 3L Kiwami 10pzs 300g',u:'bandeja 10ud',p:3.95,nota:''},
+    {id:'COMI_007',n:'EBI FRY 4L Kiwami 10pzs 390g',u:'bandeja 10ud',p:5.5,nota:''},
+    {id:'COMI_008',n:'EBI FRY Langostino Torpedo 40pzs',u:'caja 40ud',p:10.5,nota:''},
+    {id:'COMI_009',n:'EDAMAME Hanabi Precocido 400g',u:'bolsa 400gr',p:1.3,nota:''},
+    {id:'COMI_010',n:'GARI Jengibre Blanco JAPÓN 1Kg',u:'bote 1kg',p:6.85,nota:''},
+    {id:'COMI_011',n:'GOMA DRESSING Salsa sésamo 1L',u:'botella 1l',p:12.15,nota:''},
+    {id:'COMI_012',n:'HAMACHI Kingfish Filete congel.',u:'kg',p:0,nota:'/kg'},
+    {id:'COMI_013',n:'HOTATEGAI 10/20 Vieiras MSC 1Kg',u:'bolsa 1kg',p:64.0,nota:''},
+    {id:'COMI_014',n:'HOTATEGAI 20/30 Vieiras MSC 1Kg',u:'bolsa 1kg',p:49.5,nota:''},
+    {id:'COMI_015',n:'ITO Tougarashi Filamentos 100g',u:'sobre 100gr',p:11.85,nota:''},
+    {id:'COMI_016',n:'JAVA CURRY House TABLETA 1Kg',u:'caja 1kg',p:9.45,nota:''},
+    {id:'COMI_017',n:'KIMUCHI NO MOTO Momoya 1,2Kg',u:'bote 1,2kg',p:12.85,nota:''},
+    {id:'COMI_018',n:'KOMBU Alga Kombu 1Kg',u:'bolsa 1kg',p:16.5,nota:''},
+    {id:'COMI_019',n:'KURO GOMA Sésamo negro tostado 1kg',u:'bolsa 1kg',p:8.85,nota:''},
+    {id:'COMI_020',n:'LAYU Taberu Aceite guindilla 800g',u:'bote 800gr',p:28.06,nota:''},
+    {id:'COMI_021',n:'MASAGO Arare Perlas de arroz 300g',u:'bolsa 300gr',p:6.85,nota:''},
+    {id:'COMI_022',n:'MAYONESA SIN GLUTEN Kewpie 2,4L',u:'bote 2,4l',p:12.5,nota:''},
+    {id:'COMI_023',n:'MOCHI CHOCOLATE 32g X 6 uds',u:'pack 6ud',p:4.65,nota:''},
+    {id:'COMI_024',n:'MOCHI Chocolate blanco caramelo x6',u:'pack 6ud',p:4.65,nota:''},
+    {id:'COMI_025',n:'MOCHI CHOCOLATE cajita 2 uds',u:'cajita 2ud',p:1.55,nota:''},
+    {id:'COMI_026',n:'MOCHI Helado FRAMBUESA 32g x 6',u:'pack 6ud',p:4.65,nota:''},
+    {id:'COMI_027',n:'MOCHI Helado Vainilla 32g x 6',u:'pack 6ud',p:4.65,nota:''},
+    {id:'COMI_028',n:'NIHON SOBA Fideos alforfón 250g',u:'pack 250gr',p:6.4,nota:''},
+    {id:'COMI_029',n:'PALILLOS RIKYU 24cm Carbonized',u:'pack',p:5.15,nota:''},
+    {id:'COMI_030',n:'PANKO Kiwami 10kg',u:'saco 10kg',p:26.5,nota:''},
+    {id:'COMI_031',n:'PAPEL TISUSEC Pack 2 Rollos',u:'pack 2ud',p:35.5,nota:''},
+    {id:'COMI_032',n:'Polvo de pollo Ajinomoto 1 Kg',u:'bolsa 1kg',p:10.85,nota:''},
+    {id:'COMI_033',n:'RED para cocedera de arroz',u:'ud',p:9.75,nota:''},
+    {id:'COMI_034',n:'SALSA de OSTRAS LKK 907g',u:'bote 907gr',p:4.25,nota:''},
+    {id:'COMI_035',n:'Salsa de SOJA Shoda 18L',u:'bidon 18l',p:34.92,nota:''},
+    {id:'COMI_036',n:'Salsa de SOJA Shoda 1L',u:'botella 1l',p:2.35,nota:''},
+    {id:'COMI_037',n:'Salsa soja sin gluten Ichibiki 500ml',u:'botella 500ml',p:8.7,nota:''},
+    {id:'COMI_038',n:'SESAMO Tostado Kimuchi 1Kg',u:'bolsa 1kg',p:24.75,nota:''},
+    {id:'COMI_039',n:'SETAS desecadas Shiitake 3kg',u:'saco 3kg',p:54.85,nota:''},
+    {id:'COMI_040',n:'Shichimi Tougarashi 7 especias 300g',u:'bote 300gr',p:16.17,nota:''},
+    {id:'COMI_041',n:'SHIRAGIKU Mizkan Vinagre Arroz 20L',u:'bidon 20l',p:45.8,nota:''},
+    {id:'COMI_042',n:'SHIRAGIKU Vinagre arroz Mizkan 1.8L',u:'botella 1,8l',p:7.65,nota:''},
+    {id:'COMI_043',n:'SHIRO GOMA Sésamo blanco tostado 1kg',u:'bolsa 1kg',p:7.75,nota:''},
+    {id:'COMI_044',n:'TAKUWAN Nabo amarillo 340g',u:'pack 340gr',p:2.1,nota:''},
+    {id:'COMI_045',n:'TAKUWAN Nabo amarillo 500g',u:'pack 500gr',p:3.8,nota:''},
+    {id:'COMI_046',n:'TENKASU Migas crujientes tempura 1kg',u:'bolsa 1kg',p:9.25,nota:''},
+    {id:'COMI_047',n:'VIEIRA Groen congelada 20/40 1kg',u:'bolsa 1kg',p:45.85,nota:''},
+    {id:'COMI_048',n:'Vinagre negro KUROZU 500ml',u:'botella 500ml',p:5.49,nota:''},
+    {id:'COMI_049',n:'WASABI Nama Oroshi 300g',u:'tubo 300gr',p:9.25,nota:''},
+    {id:'COMI_050',n:'YAKINORI Super A 50 hojas',u:'pack 50hj',p:10.85,nota:''},
+    {id:'COMI_051',n:'YAKINORI Takaokaya Miyabi 50hj',u:'pack 50hj',p:29.85,nota:''},
+    {id:'COMI_052',n:'YUZU Kizami congelado 100g',u:'bolsa 100gr',p:5.85,nota:''},
+    {id:'COMI_053',n:'Zumo de YUZU 1.8L',u:'botella 1,8l',p:52.0,nota:''},
+  ]},
+  // ═══════════════════════════════ OCASIONALES ═══════════════════════════════
+  {id:'jenquimica',nombre:'JEN QUIMICA',comercial:'jen quimica',wa:'34669788274',tipo:'ocasional',productos:[
+    {id:'JENQ_001',n:'BAYETA REJILLA BLANCA PAQ 12',u:'pack 12ud',p:2.96,nota:''},
+    {id:'JENQ_003',n:'BOBINA INDUSTRIAL AIRTECH 141MTS',u:'rollo',p:32.95,nota:''},
+    {id:'JENQ_004',n:'BOBINA SECAMANOS EXTRA 1X6',u:'pack 6ud',p:13.45,nota:''},
+    {id:'JENQ_002',n:'BOLSA BASURA 85X105 30X10',u:'pack 30ud',p:34.8,nota:''},
+    {id:'JENQ_005',n:'BOLSA VACIO 30X40 PAQ100',u:'pack 100ud',p:12.38,nota:''},
+    {id:'JENQ_011',n:'FAIRY ABRILLANTADOR DOSIF AUT 10L',u:'garrafa 10l',p:70.16,nota:''},
+    {id:'JENQ_010',n:'FAIRY DETERGENTE DOSIF AUT 10L',u:'garrafa 10l',p:55.32,nota:''},
+    {id:'JENQ_023',n:'FIBRA VERDE CON ESPONJA 100X150MM',u:'ud',p:0.33,nota:''},
+    {id:'JENQ_022',n:'FILM INDUSTRIAL ANCHO 45',u:'ud',p:6.35,nota:''},
+    {id:'JENQ_006',n:'GUANTE NITRILO NEGRO T/G 100ud',u:'caja 100ud',p:3.85,nota:''},
+    {id:'JENQ_007',n:'GUANTE NITRILO NEGRO T/P 100ud',u:'caja 100ud',p:3.85,nota:''},
+    {id:'JENQ_008',n:'HIGIENICO DOM 2C 25M FARDO 108',u:'fardo',p:25.16,nota:''},
+    {id:'JENQ_019',n:'LAVAVAJILLAS MANUAL 5L',u:'garrafa 5l',p:4.05,nota:''},
+    {id:'JENQ_016',n:'LEJIA NORMAL 1 LITRO',u:'botella 1l',p:0.47,nota:''},
+    {id:'JENQ_009',n:'MANGA PASTELERA DESECHABLE 40CM 100U',u:'pack 100ud',p:8.47,nota:''},
+    {id:'JENQ_017',n:'MASSLIMP BIOFRESH 5 LITROS',u:'garrafa 5l',p:13.06,nota:''},
+    {id:'JENQ_018',n:'MR PROPER LEMON DESINF 5L',u:'garrafa 5l',p:13.54,nota:''},
+    {id:'JENQ_012',n:'PIEDRA POMEZ EXTRA CAJA 12 UNIDS',u:'caja 12ud',p:13.37,nota:''},
+    {id:'JENQ_013',n:'PULVERIZADOR 750ML',u:'ud',p:1.21,nota:''},
+    {id:'JENQ_014',n:'SERVICIO 30X40 16PAQx150UNIDS',u:'caja',p:44.59,nota:''},
+    {id:'JENQ_015',n:'TOALLA Z LUCART CAJA 20',u:'caja 20ud',p:18.0,nota:''},
+    {id:'JENQ_020',n:'ZENOX DESENGRASANTE PLANCHA 5L',u:'garrafa 5l',p:6.8,nota:''},
+    {id:'JENQ_021',n:'ZENOX FREGASUELOS FLORAL 5L',u:'garrafa 5l',p:4.85,nota:''},
+  ]},
+  {id:'kemikal',nombre:'KEMIKAL PROFESIONAL',comercial:'kemikal profesional',wa:'34695991111',tipo:'ocasional',productos:[
+    {id:'KEMI_001',n:'BAYETA MICROFIBRA ROJO 6U',u:'pack 6ud',p:3.11,nota:''},
+    {id:'KEMI_002',n:'BAYETA MICROFIBRA VERDE 6U',u:'pack 6ud',p:3.11,nota:''},
+    {id:'KEMI_003',n:'BAYETA REJILLA BLANCA 12U',u:'pack 12ud',p:1.3,nota:''},
+    {id:'KEMI_004',n:'BOBINA CELULOSA PESCADO 2 ROLLOS',u:'pack 2ud',p:52.0,nota:''},
+    {id:'KEMI_005',n:'BOBINA SECAMANOS 115M 6 ROLLOS',u:'pack 6ud',p:16.0,nota:''},
+    {id:'KEMI_007',n:'BOLSA BASURA 85X105 NEGRA 10S',u:'rollo 10ud',p:1.49,nota:''},
+    {id:'KEMI_006',n:'BOLSA VACIO 30x40cm 90 MICR 100U',u:'pack 100ud',p:13.92,nota:''},
+    {id:'KEMI_009',n:'ETIQUETA DOMINGO 1000ud',u:'rollo 1000ud',p:7.02,nota:''},
+    {id:'KEMI_010',n:'ETIQUETA JUEVES 1000ud',u:'rollo 1000ud',p:7.02,nota:''},
+    {id:'KEMI_011',n:'ETIQUETA LUNES 1000ud',u:'rollo 1000ud',p:7.02,nota:''},
+    {id:'KEMI_012',n:'ETIQUETA MARTES 1000ud',u:'rollo 1000ud',p:7.02,nota:''},
+    {id:'KEMI_013',n:'ETIQUETA MIERCOLES 1000ud',u:'rollo 1000ud',p:7.02,nota:''},
+    {id:'KEMI_008',n:'ETIQUETA SABADO 1000ud',u:'rollo 1000ud',p:7.02,nota:''},
+    {id:'KEMI_014',n:'ETIQUETA VIERNES 1000ud',u:'rollo 1000ud',p:7.02,nota:''},
+    {id:'KEMI_015',n:'FILM INDUSTRIAL 30 3UD',u:'pack 3ud',p:3.5,nota:''},
+    {id:'KEMI_016',n:'GUANTE NEGRO NITRILO TALLA G 100UD',u:'caja 100ud',p:5.0,nota:''},
+    {id:'KEMI_017',n:'GUANTE NEGRO NITRILO TALLA M 100UD',u:'caja 100ud',p:5.0,nota:''},
+    {id:'KEMI_018',n:'GUANTE NEGRO NITRILO TALLA S 100UD',u:'caja 100ud',p:5.0,nota:''},
+    {id:'KEMI_019',n:'HIGIENICO INDUSTRIAL 18 ROLLOS',u:'pack 18ud',p:15.61,nota:''},
+    {id:'KEMI_020',n:'KP ABRILLANTADOR SECANTE 5L',u:'garrafa 5l',p:7.46,nota:''},
+    {id:'KEMI_021',n:'KP DETERGENTE LAVAVAJILLAS 6KG',u:'garrafa 6kg',p:5.76,nota:''},
+    {id:'KEMI_022',n:'KP LIMPIADOR FLORAL 5L',u:'garrafa 5l',p:4.2,nota:''},
+    {id:'KEMI_023',n:'KP SANICLEAN 5L',u:'garrafa 5l',p:8.84,nota:''},
+    {id:'KEMI_024',n:'LEJIA ALIMENTARIA 15 BOTELLAS',u:'pack 15ud',p:7.0,nota:''},
+    {id:'KEMI_025',n:'MANGA REPOSTERA 55CM 50UD',u:'rollo 50ud',p:7.98,nota:''},
+    {id:'KEMI_026',n:'Molde Semiesferico 8cm',u:'ud',p:4.63,nota:''},
+    {id:'KEMI_027',n:'Parrilla Gastronorm 2/3 35x32cm',u:'ud',p:19.66,nota:''},
+    {id:'KEMI_028',n:'Ramekin Acero 340ml',u:'ud',p:1.42,nota:''},
+  ]},
+  {id:'beeonfood',nombre:'Beef On Food SL',comercial:'beef on food',wa:'34615649826',tipo:'ocasional',productos:[
+    {id:'BEEF_001',n:'Colmo de Wagyu Tri Tip',u:'kg',p:35.9,nota:'/kg'},
+    {id:'BEEF_002',n:'Solomillo Wagyu Oyster Blade',u:'kg',p:30.9,nota:'/kg'},
+    {id:'BEEF_003',n:'Vacio de Wagyu Flank Steak',u:'kg',p:35.9,nota:'/kg'},
+  ]},
+  {id:'beran',nombre:'Beran Alimentacion SL',comercial:'beran alimentacion',wa:'34630920305',tipo:'ocasional',productos:[
+    {id:'BERA_001',n:'ACEITE DE OLIVA VIRGEN EXTRA 5L',u:'garrafa 5l',p:6.25,nota:''},
+    {id:'BERA_002',n:'HUEVO FRESCO',u:'ud',p:3.58,nota:''},
+    {id:'BERA_003',n:'MOSTAZA DIJON A LA ANTIGUA 1KG',u:'tarro 1kg',p:12.86,nota:''},
+    {id:'BERA_006',n:'QUESO GRANA PADANO',u:'kg',p:5.7,nota:'/kg'},
+    {id:'BERA_004',n:'REGAÑA 450GR',u:'bolsa 450gr',p:2.66,nota:''},
+    {id:'BERA_005',n:'SAL FINA DE MESA 1KG',u:'bolsa 1kg',p:0.34,nota:''},
+    {id:'BERA_007',n:'VINAGRE 1L',u:'botella 1l',p:0.7,nota:''},
+    {id:'BERA_008',n:'YEMA DE HUEVO',u:'kg',p:14.13,nota:'/kg'},
+  ]},
+  {id:'trueworldfoods',nombre:'True World Foods Spain',comercial:'true world foods',wa:'34637291467',tipo:'ocasional',productos:[
+    {id:'TRUE_001',n:'ATUN LOMO BAJO CENTRO BALFEGÓ',u:'kg',p:35.0,nota:'/kg'},
+    {id:'TRUE_002',n:'HUEVA DE ERIZO CG',u:'ud',p:28.0,nota:''},
+    {id:'TRUE_003',n:'VIEIRA 20/30',u:'ud',p:46.5,nota:''},
+  ]},
+];
+
+// Cargar cantidades guardadas al inicio
+
+// ── 2. ESTADO DE LA APP ──────────────────────────────────────────────────────
+const Q = JSON.parse(localStorage.getItem('pedido_q')||'{}');
+let productosOcultos = JSON.parse(localStorage.getItem('productos_ocultos')||'[]');
+function saveOcultos(){localStorage.setItem('productos_ocultos', JSON.stringify(productosOcultos));}
+function saveQ(){localStorage.setItem('pedido_q', JSON.stringify(Q));}
+let colaEnvio=[];let colaIdx=0;
+const UNIDADES_PRESET=['kg','l','ud','bote','bolsa','bandeja','pack','caja','garrafa','rollo','lata','bidon'];
+let nuevoProvId=null;let unidadSel=null;
+
+// ── 3. SUPABASE ──────────────────────────────────────────────────────────────
+const SUPA_URL = 'https://xgxziltsbvhywhmlhxna.supabase.co';
+const SUPA_KEY = 'sb_publishable_YAiPhp5ZXcGop3pTY5zXtA_X-_c2w6W';
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+let currentUser = null;
+let stockData = {};
+let prioritariosExtra = JSON.parse(localStorage.getItem('stock_prioritarios')||'[]');
+
+function togglePrioritario(prodId){
+  if(prioritariosExtra.includes(prodId)){
+    prioritariosExtra = prioritariosExtra.filter(p=>p!==prodId);
+  } else {
+    prioritariosExtra.push(prodId);
+  }
+  localStorage.setItem('stock_prioritarios', JSON.stringify(prioritariosExtra));
+  renderStock();
+}
+
+function toggleMenu(){
+  document.getElementById('menu-panel').classList.toggle('on');
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest('#menu-panel') && !e.target.closest('.menu-btn')){
+    document.getElementById('menu-panel').classList.remove('on');
+  }
+});
+
+async function checkSession(){
+  const {data:{session}} = await supa.auth.getSession().catch(()=>({data:{session:null}}));
+  if(session){
+    currentUser = session.user;
+    cargarStock();
+  } else {
+    setTimeout(()=>document.getElementById('login-screen').classList.add('on'), 4200);
+  }
+}
+async function doLogin(){
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const err   = document.getElementById('login-err');
+  err.textContent = '';
+  if(!email||!pass){err.textContent='Introduce email y contraseña';return;}
+  const {data, error} = await supa.auth.signInWithPassword({email, password:pass});
+  if(error){err.textContent='Email o contraseña incorrectos';return;}
+  currentUser = data.user;
+  document.getElementById('login-screen').classList.remove('on');
+  cargarStock();
+}
+async function doLogout(){
+  await supa.auth.signOut();
+  currentUser = null;
+  document.getElementById('menu-panel').classList.remove('on');
+  document.getElementById('login-screen').classList.add('on');
+}
+
+
+// ── 4. FECHAS Y ENTREGAS ─────────────────────────────────────────────────────
+const DIAS_ABRE = [2,3,4,5,6];
+
+function proximoDiaAbre(desde){
+  const d = new Date(desde);
+  d.setDate(d.getDate()+1);
+  while(!DIAS_ABRE.includes(d.getDay())) d.setDate(d.getDate()+1);
+  return d;
+}
+
+function calcEntregaProv(prov){
+  const ahora = new Date();
+  const hora = ahora.getHours() + ahora.getMinutes()/60;
+  const dia = ahora.getDay(); // 0=dom,1=lun,...,6=sab
+
+  // Si el proveedor tiene días de entrega fijos
+  if(prov.diasEntrega){
+    const corte = prov.horaCorte || 24;
+    // Si aún estamos antes del corte hoy, buscamos desde hoy mismo
+    const base = hora < corte ? ahora : new Date(ahora.getTime()+86400000);
+    const baseDia = base.getDay();
+    // Buscar siguiente día de entrega
+    let mejor = null;
+    for(let i=1; i<=7; i++){
+      const candidato = new Date(base);
+      candidato.setDate(base.getDate() + i);
+      if(prov.diasEntrega.includes(candidato.getDay()) && DIAS_ABRE.includes(candidato.getDay())){
+        mejor = candidato;
+        break;
+      }
+    }
+    // También revisar si hoy ya es día de entrega y antes del corte
+    if(hora < corte && prov.diasEntrega.includes(dia) && DIAS_ABRE.includes(dia)){
+      mejor = new Date(ahora);
+    }
+    return mejor || proximoDiaAbre(ahora);
+  }
+
+  // Proveedor con hora de corte (Tokyo Ya)
+  if(prov.horaCorte){
+    const corte = prov.horaCorte;
+    if(hora < corte){
+      // Antes del corte — entrega mañana si abre
+      return proximoDiaAbre(new Date(ahora.getTime()-86400000));
+    } else {
+      // Pasado el corte — entrega pasado mañana
+      return proximoDiaAbre(ahora);
+    }
+  }
+
+  // Resto de proveedores — lógica general MYO
+  // Sábado 00:00-00:30 → entrega sábado mismo
+  if(dia === 6 && hora < 0.5) return ahora;
+  // Dom, lun, o sábado tarde → martes
+  if(dia === 0 || dia === 1 || (dia === 6 && hora >= 0.5)){
+    const martes = new Date(ahora);
+    const diasHastaMartes = (2 - dia + 7) % 7 || 7;
+    martes.setDate(ahora.getDate() + diasHastaMartes);
+    return martes;
+  }
+  // Mar-Vie → siguiente día hábil
+  return proximoDiaAbre(ahora);
+}
+
+function fmtL(d){const s=d.toLocaleDateString('es-ES',{weekday:'long',year:'numeric',month:'long',day:'numeric'});return s.charAt(0).toUpperCase()+s.slice(1);}
+function fmtS(d){return d.toLocaleDateString('es-ES');}
+document.getElementById('td').textContent = fmtL(proximoDiaAbre(new Date(new Date().getTime()-86400000)));
+
+
+// ── 5. RENDER DE PROVEEDORES ─────────────────────────────────────────────────
+function render(){
+  const cont=document.getElementById('proveedores');cont.innerHTML='';
+  const diarios=PROVEEDORES.filter(p=>p.tipo==='diario');
+  const ocasionales=PROVEEDORES.filter(p=>p.tipo==='ocasional');
+  const d1=document.createElement('div');d1.className='sec-label';d1.textContent='— Proveedores diarios';cont.appendChild(d1);
+  diarios.forEach(prov=>cont.appendChild(buildAcc(prov)));
+  const d2=document.createElement('div');d2.className='sec-label';d2.style.marginTop='16px';d2.textContent='— Proveedores ocasionales';cont.appendChild(d2);
+  ocasionales.forEach(prov=>cont.appendChild(buildAcc(prov)));
+}
+
+function buildAcc(prov){
+  const cnt=prov.productos.filter(p=>(Q[p.id]||0)>0).length;
+  const div=document.createElement('div');div.className='acc';
+  div.innerHTML=`
+    <div class="acc-header" id="ah-${prov.id}" onclick="toggleAcc('${prov.id}')">
+      <div class="acc-left">
+        <div class="acc-tag${prov.tipo==='ocasional'?' ocas':''}">${prov.tipo==='diario'?'Diario':'Ocas.'}</div>
+        <div><div class="acc-name">${prov.nombre}</div><div class="acc-count">${prov.productos.length} productos</div></div>
+      </div>
+      <div class="acc-right">
+        ${cnt>0?`<div class="acc-badge">${cnt} añadido${cnt>1?'s':''}</div>`:''}
+        <div class="acc-arrow">▼</div>
+      </div>
+    </div>
+    <div class="acc-body" id="ab-${prov.id}"><div class="pl" id="pl-${prov.id}"></div><button class="add-prod-btn" onclick="abrirNuevo('${prov.id}')">+ Añadir producto a ${prov.nombre}</button></div>`;
+  setTimeout(()=>renderProds(prov),0);
+  return div;
+}
+
+function renderProds(prov){
+  const l=document.getElementById('pl-'+prov.id);if(!l)return;l.innerHTML='';
+  const visibles = prov.productos.filter(p=>!productosOcultos.includes(p.id));
+  visibles.forEach(p=>{
+    const q=Q[p.id]||0;
+    const esCustom = p.id.includes('_C');
+    const precioLabel = p.p>0 ? p.p.toFixed(2)+' €' : '—';
+    const unitaLabel = p.nota ? `<div class="pp-unit">${p.nota}</div>` : '';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'pr-swipe-wrap';
+    wrap.innerHTML = `
+      <div class="pr-delete-bg">Ocultar</div>
+      <div class="pr-swipe-inner">
+        <div class="pr${q>0?' sel':''}" id="r${p.id}" data-name="${p.n.toLowerCase()}">
+          <div class="pr-top">
+            <div style="flex:1"><div class="pr-name">${p.n}</div><div class="pr-id">${p.id} · ${p.u}</div></div>
+            <div class="pr-right">
+              <div class="pp${p.p>0?' hp':''}" id="pp-${p.id}">${precioLabel}</div>
+              ${unitaLabel}
+            </div>
+          </div>
+          <div class="pr-bottom">
+            <button class="unit-btn" onclick="toggleUnit('${prov.id}','${p.id}')">${p.u}</button>
+            <div class="qw">
+              <button class="qb" onclick="chg('${p.id}',-1)">−</button>
+              <input class="qi" type="number" min="0" value="${q}" oninput="setq('${p.id}',this.value)" id="q${p.id}" inputmode="decimal">
+              <button class="qb" onclick="chg('${p.id}',1)">+</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+    // Long press para editar (todos los productos)
+    const prDiv = wrap.querySelector('.pr');
+    let pressTimer = null;
+    prDiv.addEventListener('touchstart', ()=>{
+      pressTimer = setTimeout(()=>{ pressTimer=null; abrirEditorProducto(prov.id, p.id); }, 600);
+    },{passive:true});
+    prDiv.addEventListener('touchend', ()=>{ if(pressTimer){clearTimeout(pressTimer);pressTimer=null;} });
+    prDiv.addEventListener('touchmove', ()=>{ if(pressTimer){clearTimeout(pressTimer);pressTimer=null;} });
+
+    // Swipe para ocultar
+    const swipeInner = wrap.querySelector('.pr-swipe-inner');
+    let startX=0, startY=0, currentX=0, isSwiping=false, lockScroll=false;
+    swipeInner.addEventListener('touchstart', e=>{
+      startX=e.touches[0].clientX;
+      startY=e.touches[0].clientY;
+      isSwiping=true; lockScroll=false; currentX=0;
+    },{passive:true});
+    swipeInner.addEventListener('touchmove', e=>{
+      if(!isSwiping) return;
+      const dx=e.touches[0].clientX - startX;
+      const dy=e.touches[0].clientY - startY;
+      if(!lockScroll && Math.abs(dy)>Math.abs(dx)){isSwiping=false;return;}
+      if(Math.abs(dx)<8) return;
+      lockScroll=true;
+      currentX=dx;
+      if(currentX < 0){
+        document.querySelectorAll('.pr-swipe-wrap.swiping').forEach(w=>{
+          if(w!==wrap){w.classList.remove('swiping');w.querySelector('.pr-swipe-inner').style.transform='translateX(0)';}
+        });
+        wrap.classList.add('swiping');
+        swipeInner.style.transition='none';
+        swipeInner.style.transform=`translateX(${Math.max(currentX,-72)}px)`;
+      }
+    },{passive:true});
+    swipeInner.addEventListener('touchend', ()=>{
+      if(!isSwiping || !lockScroll){isSwiping=false;lockScroll=false;return;}
+      isSwiping=false; lockScroll=false;
+      swipeInner.style.transition='transform .2s ease';
+      if(currentX < -50){
+        swipeInner.style.transform='translateX(-100%)';
+        setTimeout(()=>{
+          wrap.style.transition='max-height .3s ease, opacity .3s ease';
+          wrap.style.maxHeight = wrap.offsetHeight+'px';
+          requestAnimationFrame(()=>{ wrap.style.maxHeight='0'; wrap.style.opacity='0'; });
+          setTimeout(()=>ocultarProducto(prov.id, p.id), 300);
+        }, 150);
+      } else {
+        swipeInner.style.transform='translateX(0)';
+        wrap.classList.remove('swiping');
+      }
+      currentX=0;
+    });
+    l.appendChild(wrap);
+  });
+}
+
+
+// ── 6. ACORDEÓN ──────────────────────────────────────────────────────────────
+function toggleAcc(id){
+  const isOpen=document.getElementById('ab-'+id).classList.contains('open');
+  const scrollY=window.scrollY;
+  PROVEEDORES.forEach(p=>{
+    document.getElementById('ah-'+p.id)?.classList.remove('open');
+    document.getElementById('ab-'+p.id)?.classList.remove('open');
+  });
+  if(!isOpen){
+    document.getElementById('ah-'+id).classList.add('open');
+    document.getElementById('ab-'+id).classList.add('open');
+    const prov=PROVEEDORES.find(p=>p.id===id);
+    document.getElementById('float-bar-name').textContent=prov.nombre;
+    document.getElementById('float-bar').classList.add('on');
+    // Scroll al inicio del acordeón
+    setTimeout(()=>{
+      const el=document.getElementById('ah-'+id);
+      if(!el) return;
+      const offset=document.querySelector('.search-bar')?.getBoundingClientRect().bottom||100;
+      const top=el.getBoundingClientRect().top+window.scrollY-offset-8;
+      window.scrollTo({top:top,behavior:'smooth'});
+    },50);
+  } else {
+    document.getElementById('float-bar').classList.remove('on');
+    requestAnimationFrame(()=>window.scrollTo({top:scrollY,behavior:'instant'}));
+  }
+}
+function cerrarFloating(){
+  // Buscar el proveedor abierto actualmente
+  const provAbierto=PROVEEDORES.find(p=>document.getElementById('ab-'+p.id)?.classList.contains('open'));
+  PROVEEDORES.forEach(p=>{
+    document.getElementById('ah-'+p.id)?.classList.remove('open');
+    document.getElementById('ab-'+p.id)?.classList.remove('open');
+  });
+  document.getElementById('float-bar').classList.remove('on');
+  // Scroll al header del proveedor que estaba abierto
+  if(provAbierto){
+    requestAnimationFrame(()=>{
+      const el=document.getElementById('ah-'+provAbierto.id);
+      const searchBottom=document.querySelector('.search-bar')?.getBoundingClientRect().bottom||100;
+      const top=el.getBoundingClientRect().top+window.scrollY-searchBottom-8;
+      window.scrollTo({top:top,behavior:'smooth'});
+    });
+  }
+}
+
+// NUEVO PRODUCTO
+
+// ── 7. CANTIDADES ────────────────────────────────────────────────────────────
+function chg(id,d){const v=Math.max(0,(Q[id]||0)+d);Q[id]=v;const i=document.getElementById('q'+id);if(i)i.value=v;const r=document.getElementById('r'+id);if(r)r.className='pr'+(v>0?' sel':'');updBadges();upd();saveQ();}
+function setq(id,v){const n=Math.max(0,parseInt(v)||0);Q[id]=n;const r=document.getElementById('r'+id);if(r)r.className='pr'+(n>0?' sel':'');updBadges();upd();saveQ();}
+function rst(){Object.keys(Q).forEach(k=>delete Q[k]);render();upd();}
+function toggleUnit(provId, prodId){
+  const prov = PROVEEDORES.find(p=>p.id===provId);
+  if(!prov) return;
+  const prod = prov.productos.find(p=>p.id===prodId);
+  if(!prod) return;
+  // Ciclar entre kg, l, ud
+  const ciclo = ['kg','l','ud'];
+  const actual = ciclo.includes(prod.u) ? prod.u : 'ud';
+  const idx = ciclo.indexOf(actual);
+  prod.u = ciclo[(idx+1)%ciclo.length];
+  renderProds(prov);
+  showT(`Unidad cambiada a ${prod.u}`);
+}
+
+// ── 8. RESUMEN ───────────────────────────────────────────────────────────────
+function updBadges(){PROVEEDORES.forEach(prov=>{const ah=document.getElementById('ah-'+prov.id);if(!ah)return;const cnt=prov.productos.filter(p=>(Q[p.id]||0)>0).length;const right=ah.querySelector('.acc-right');let badge=right.querySelector('.acc-badge');if(cnt>0){if(!badge){badge=document.createElement('div');badge.className='acc-badge';right.insertBefore(badge,right.lastElementChild);}badge.textContent=cnt+' añadido'+(cnt>1?'s':'');}else{if(badge)badge.remove();}});}
+function upd(){
+  const gs=document.getElementById('gsecs'),ta=document.getElementById('ta'),tw=document.getElementById('tw');
+  let tot=0,sp=0,hay=false;gs.innerHTML='';
+  PROVEEDORES.forEach(prov=>{
+    const its=prov.productos.filter(p=>(Q[p.id]||0)>0);if(!its.length)return;hay=true;
+    const sec=document.createElement('div');
+    const ti=document.createElement('div');ti.className='gsec-title';ti.textContent=prov.nombre;sec.appendChild(ti);
+    let sub=0;
+    its.forEach(p=>{
+      const q=Q[p.id],c=p.p*q;sub+=c;tot+=c;if(!p.p)sp++;
+      const d=document.createElement('div');d.className='ritem';
+      const nota=p.nota?`<span style="font-size:.58rem;color:var(--d)">${p.nota}</span>`:'';
+      d.innerHTML=`<span style="flex:1">${p.n}</span><span style="color:var(--d);margin:0 6px">×${q}</span><span style="color:${p.p?'var(--a)':'var(--d)'}">${p.p?c.toFixed(2)+' €':'s/p'}</span>${nota}`;
+      sec.appendChild(d);
+    });
+    const st=document.createElement('div');st.style.cssText='text-align:right;font-size:.63rem;color:var(--d);padding:5px 0 2px';
+    st.textContent='Subtotal: '+(sub>0?sub.toFixed(2)+' €':'—');sec.appendChild(st);
+    gs.appendChild(sec);
+  });
+  if(!hay)gs.innerHTML='<div class="emp">Añade productos para ver el resumen</div>';
+  ta.textContent=tot.toFixed(2).replace('.',',')+' €';
+  tw.textContent=sp?'⚠ '+sp+' producto(s) sin precio':'';
+}
+
+// ── 9. BUSCADOR ──────────────────────────────────────────────────────────────
+function doSearch(val){
+  const v=val.toLowerCase().trim();
+  document.getElementById('sclear').style.display=v?'block':'none';
+  document.getElementById('sicon').style.display=v?'none':'block';
+  if(!v){
+    PROVEEDORES.forEach(prov=>{
+      const b=document.getElementById('ab-'+prov.id);
+      const ah=document.getElementById('ah-'+prov.id);
+      if(b)b.querySelectorAll('.pr-swipe-wrap').forEach(w=>w.style.display='');
+      const tieneSel=prov.productos.some(p=>(Q[p.id]||0)>0);
+      if(b&&ah){
+        if(tieneSel){b.classList.add('open');ah.classList.add('open');}
+        else{b.classList.remove('open');ah.classList.remove('open');}
+      }
+    });
+    return;
+  }
+  PROVEEDORES.forEach(prov=>{
+    const b=document.getElementById('ab-'+prov.id);if(!b)return;
+    let any=false;
+    b.querySelectorAll('.pr-swipe-wrap').forEach(w=>{
+      const r=w.querySelector('.pr');
+      const m=r&&r.dataset.name&&r.dataset.name.includes(v);
+      w.style.display=m?'':'none';
+      if(m)any=true;
+    });
+    const ah=document.getElementById('ah-'+prov.id);
+    if(any){b.classList.add('open');ah.classList.add('open');}else{b.classList.remove('open');ah.classList.remove('open');}
+  });
+}
+function clearSearch(){document.getElementById('search').value='';doSearch('');}
+
+// ── 10. AÑADIR PRODUCTO ──────────────────────────────────────────────────────
+function abrirNuevo(provId){
+  nuevoProvId=provId;unidadSel=null;
+  const prov=PROVEEDORES.find(p=>p.id===provId);
+  document.getElementById('mo-nuevo-prov').textContent='Proveedor: '+prov.nombre;
+  document.getElementById('np-nombre').value='';
+  document.getElementById('np-precio').value='';
+  document.getElementById('np-unidad-custom').value='';
+  document.getElementById('np-error').style.display='none';
+  // Render unidad buttons
+  const grid=document.getElementById('np-unidades');
+  grid.innerHTML='';
+  UNIDADES_PRESET.forEach(u=>{
+    const b=document.createElement('button');
+    b.className='unidad-btn';b.textContent=u;
+    b.onclick=()=>{grid.querySelectorAll('.unidad-btn').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');unidadSel=u;document.getElementById('np-unidad-custom').value='';};
+    grid.appendChild(b);
+  });
+  document.getElementById('mo-nuevo').classList.add('on');
+  setTimeout(()=>document.getElementById('np-nombre').focus(),300);
+}
+
+function cerrarNuevo(){document.getElementById('mo-nuevo').classList.remove('on');nuevoProvId=null;unidadSel=null;}
+
+function guardarNuevo(){
+  const nombre=document.getElementById('np-nombre').value.trim();
+  const custom=document.getElementById('np-unidad-custom').value.trim();
+  const unidad=custom||unidadSel;
+  const precioVal=parseFloat(document.getElementById('np-precio').value)||0;
+  if(!nombre||!unidad){document.getElementById('np-error').style.display='block';return;}
+  document.getElementById('np-error').style.display='none';
+  const prov=PROVEEDORES.find(p=>p.id===nuevoProvId);
+  const newId=prov.id.toUpperCase().slice(0,4)+'_C'+Date.now().toString().slice(-4);
+  const nota=(['kg','l'].includes(unidad))?'/'+unidad:'';
+  prov.productos.push({id:newId,n:nombre,u:unidad,p:precioVal,nota:nota});
+  // Re-sort alphabetically
+  prov.productos.sort((a,b)=>a.n.toLowerCase().localeCompare(b.n.toLowerCase()));
+  cerrarNuevo();
+  renderProds(prov);
+  // Re-render badge count
+  const ah=document.getElementById('ah-'+prov.id);
+  if(ah){const c=ah.querySelector('.acc-count');if(c)c.textContent=prov.productos.length+' productos';}
+  showT('✓ Producto añadido a '+prov.nombre);
+}
+
+// ── 11. EDITAR Y OCULTAR PRODUCTOS ───────────────────────────────────────────
+function abrirEditorProducto(provId, prodId){
+  const prov = PROVEEDORES.find(p=>p.id===provId);
+  if(!prov) return;
+  const prod = prov.productos.find(p=>p.id===prodId);
+  if(!prod) return;
+  const esCustom = prodId.includes('_C');
+  document.getElementById('ed-nombre').value = prod.n;
+  document.getElementById('ed-precio').value = prod.p || '';
+  document.getElementById('ed-borrar').style.display = esCustom ? 'block' : 'none';
+  document.getElementById('ed-provid').value = provId;
+  document.getElementById('ed-prodid').value = prodId;
+  document.getElementById('mo-editor').classList.add('on');
+}
+function guardarEditor(){
+  const provId = document.getElementById('ed-provid').value;
+  const prodId = document.getElementById('ed-prodid').value;
+  const prov = PROVEEDORES.find(p=>p.id===provId);
+  if(!prov) return;
+  const prod = prov.productos.find(p=>p.id===prodId);
+  if(!prod) return;
+  const nuevoNombre = document.getElementById('ed-nombre').value.trim();
+  const nuevoPrecio = parseFloat(document.getElementById('ed-precio').value)||0;
+  if(!nuevoNombre){showT('El nombre no puede estar vacío');return;}
+  prod.n = nuevoNombre;
+  prod.p = nuevoPrecio;
+  if(nuevoPrecio>0) prod.nota = (['kg','l'].includes(prod.u))?'/'+prod.u:'';
+  cerrarEditor();
+  renderProds(prov);
+  showT('Producto actualizado');
+}
+function borrarProductoEditor(){
+  const provId = document.getElementById('ed-provid').value;
+  const prodId = document.getElementById('ed-prodid').value;
+  const prov = PROVEEDORES.find(p=>p.id===provId);
+  if(!prov) return;
+  const prod = prov.productos.find(p=>p.id===prodId);
+  cerrarEditor();
+  prov.productos = prov.productos.filter(p=>p.id!==prodId);
+  productosOcultos = productosOcultos.filter(id=>id!==prodId);
+  delete Q[prodId]; saveQ(); saveOcultos();
+  renderProds(prov);
+  updBadges(); upd();
+  const ah=document.getElementById('ah-'+prov.id);
+  if(ah){const c=ah.querySelector('.acc-count');if(c)c.textContent=prov.productos.length+' productos';}
+  showT('Producto eliminado');
+}
+function cerrarEditor(){document.getElementById('mo-editor').classList.remove('on');}
+
+function ocultarProducto(provId, prodId){
+  if(!productosOcultos.includes(prodId)) productosOcultos.push(prodId);
+  saveOcultos();
+  delete Q[prodId]; saveQ();
+  const prov = PROVEEDORES.find(p=>p.id===provId);
+  if(prov) renderProds(prov);
+  updBadges(); upd();
+  showT('Producto ocultado — restáuralo desde ⋮');
+}
+function abrirRestaurar(){
+  const lista = document.getElementById('restaurar-lista');
+  lista.innerHTML = '';
+  if(productosOcultos.length === 0){
+    lista.innerHTML = '<div style="text-align:center;color:var(--d);padding:20px;font-size:.82rem">No hay productos ocultos</div>';
+    document.getElementById('btn-restaurar-todos').style.display = 'none';
+  } else {
+    document.getElementById('btn-restaurar-todos').style.display = '';
+    productosOcultos.forEach(prodId=>{
+      let prod=null, provNombre='';
+      PROVEEDORES.forEach(prov=>{
+        const found = prov.productos.find(p=>p.id===prodId);
+        if(found){prod=found; provNombre=prov.nombre;}
+      });
+      if(!prod) return;
+      const row = document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--b);gap:8px';
+      row.innerHTML=`<div><div style="font-size:.82rem;font-weight:500;color:var(--t)">${prod.n}</div><div style="font-size:.68rem;color:var(--d)">${provNombre} · ${prod.u}</div></div>
+        <button onclick="restaurarUno('${prodId}')" style="background:var(--a);color:#fff;border:none;border-radius:4px;padding:5px 12px;font-size:.72rem;cursor:pointer;white-space:nowrap">Restaurar</button>`;
+      lista.appendChild(row);
+    });
+  }
+  document.getElementById('mo-restaurar').classList.add('on');
+}
+function cerrarRestaurar(){document.getElementById('mo-restaurar').classList.remove('on');}
+function restaurarUno(prodId){
+  productosOcultos = productosOcultos.filter(id=>id!==prodId);
+  saveOcultos();
+  PROVEEDORES.forEach(prov=>{
+    if(prov.productos.find(p=>p.id===prodId)) renderProds(prov);
+  });
+  updBadges(); upd();
+  abrirRestaurar();
+  showT('Producto restaurado');
+}
+function restaurarTodos(){
+  productosOcultos = [];
+  saveOcultos();
+  PROVEEDORES.forEach(prov=>renderProds(prov));
+  updBadges(); upd();
+  cerrarRestaurar();
+  showT('Todos los productos restaurados');
+}
+
+
+// ── 12. ENVÍO DE PEDIDOS ─────────────────────────────────────────────────────
+function openM(){
+  const activos=PROVEEDORES.filter(prov=>prov.productos.some(p=>(Q[p.id]||0)>0));
+  if(!activos.length){showT('Añade al menos un producto');return;}
+  colaEnvio=activos.map(p=>({...p,enviado:false}));
+  colaIdx=0;
+  document.getElementById('notas').value='';
+  renderSendList();
+  document.getElementById('mo').classList.add('on');
+}
+
+function renderSendList(){
+  const list=document.getElementById('prov-send-list');
+  list.innerHTML='';
+  colaEnvio.forEach((prov,i)=>{
+    const cnt=prov.productos.filter(p=>(Q[p.id]||0)>0).length;
+    const estado=prov.enviado?'enviado':i===colaIdx?'actual':'pendiente';
+    const label=prov.enviado?'✓ Enviado':i===colaIdx?'► Siguiente':'Pendiente';
+    const d=document.createElement('div');d.className='prov-send-item';
+    d.innerHTML=`
+      <div class="prov-send-info">
+        <div class="prov-send-name">${prov.nombre}</div>
+        <div class="prov-send-cnt">${cnt} producto${cnt>1?'s':''}</div>
+      </div>
+      <div class="prov-send-estado ${estado}">${label}</div>`;
+    list.appendChild(d);
+  });
+  const pendientes=colaEnvio.filter(p=>!p.enviado).length;
+  const btn=document.getElementById('btn-enviar-todos');
+  if(pendientes===0){
+    btn.textContent='✓ Todos enviados';
+    btn.disabled=true;btn.style.opacity='.5';
+    localStorage.removeItem('pedido_q');
+    // Mostrar botón de cerrar
+    let btnCerrar = document.getElementById('btn-cerrar-envio');
+    if(!btnCerrar){
+      btnCerrar = document.createElement('button');
+      btnCerrar.id = 'btn-cerrar-envio';
+      btnCerrar.className = 'btn bp';
+      btnCerrar.style.marginTop = '10px';
+      btnCerrar.textContent = 'Cerrar ✕';
+      btnCerrar.onclick = ()=>{
+        closeM();
+        // Resetear cantidades en pantalla
+        Object.keys(Q).forEach(k=>{Q[k]=0;});
+        render();upd();
+      };
+      btn.parentElement.appendChild(btnCerrar);
+    }
+  } else {
+    btn.textContent=`Enviar a ${colaEnvio[colaIdx]?.nombre} →`;
+    btn.disabled=false;btn.style.opacity='1';
+  }
+}
+
+async function enviarSiguiente(){
+  if(colaIdx>=colaEnvio.length)return;
+  const prov=colaEnvio[colaIdx];
+  const its=prov.productos.filter(p=>(Q[p.id]||0)>0);
+  const notas=document.getElementById('notas').value;
+  const fechaEntrega = calcEntregaProv(prov);
+
+  await guardarPedidoEnBD(prov, its);
+  colaEnvio[colaIdx].enviado=true;
+  colaIdx++;
+  while(colaIdx<colaEnvio.length&&colaEnvio[colaIdx].enviado)colaIdx++;
+  renderSendList();
+
+  // Pequeño delay para que la UI se actualice antes de abrir app externa
+  setTimeout(()=>{
+    if(prov.email){
+      const asunto = `Pedido MYO Handroll Bar · Entrega ${fmtS(fechaEntrega)}`;
+      let cuerpo = `MYO Handroll Bar\nPedido ${prov.nombre} · Entrega ${fmtS(fechaEntrega)}\n\n`;
+      its.forEach(p=>{
+        const u=p.u.trim().toLowerCase();
+        const cant=u==='kg'?`${Q[p.id]} kg`:u==='l'?`${Q[p.id]} l`:`${Q[p.id]} ud`;
+        cuerpo+=`${p.n} (${p.u}) · ${cant}\n`;
+      });
+      cuerpo+=`\nEntrega después de las 10:30h`;
+      if(notas)cuerpo+=`\n${notas}`;
+      window.open(`mailto:${prov.email}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`,'_blank');
+    } else {
+      let m=`_Myo Handroll Bar_\n_Pedido ${prov.nombre} · Entrega ${fmtS(fechaEntrega)}_\n\n`;
+      its.forEach(p=>{
+        const u=p.u.trim().toLowerCase();
+        const cant=u==='kg'?`${Q[p.id]} kg`:u==='l'?`${Q[p.id]} l`:`${Q[p.id]} ud`;
+        m+=`_*${p.n.toLowerCase()} (${p.u}) · ${cant}*_\n`;
+      });
+      m+=`\n_Entrega después de las 10:30h_`;
+      if(notas)m+=`\n_${notas}_`;
+      window.open(`https://wa.me/${prov.wa}?text=${encodeURIComponent(m)}`,'_blank');
+    }
+  }, 80);
+}
+
+function closeM(){document.getElementById('mo').classList.remove('on');}
+function showT(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),3000);}
+
+// ── 13. BASE DE DATOS (SUPABASE) ─────────────────────────────────────────────
+async function guardarPedidoEnBD(prov, its){
+  if(!currentUser) return;
+  const semana = getLunes();
+  const productos = its.map(p=>({id:p.id,nombre:p.n,unidad:p.u,cantidad:Q[p.id],precio:p.p}));
+  const total = productos.reduce((s,p)=>s+p.precio*p.cantidad,0);
+
+  await supa.from('pedidos').insert({
+    user_id: currentUser.id,
+    proveedor_id: prov.id,
+    proveedor_nombre: prov.nombre,
+    semana: semana,
+    productos: productos,
+    total: total
+  });
+
+  // Acumular en stock
+  for(const p of productos){
+    const {data} = await supa.from('stock')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .eq('semana', semana)
+      .eq('producto_id', p.id)
+      .maybeSingle();
+
+    if(data){
+      await supa.from('stock').update({
+        cantidad_pedida: data.cantidad_pedida + p.cantidad,
+        cantidad_restante: data.cantidad_restante + p.cantidad,
+        updated_at: new Date().toISOString()
+      }).eq('id', data.id);
+    } else {
+      await supa.from('stock').insert({
+        user_id: currentUser.id,
+        semana: semana,
+        producto_id: p.id,
+        producto_nombre: p.nombre,
+        unidad: p.unidad,
+        cantidad_pedida: p.cantidad,
+        cantidad_restante: p.cantidad,
+        proveedor_nombre: prov.nombre
+      });
+    }
+  }
+}
+
+function getLunes(){
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day===0?-6:1);
+  const lunes = new Date(d.setDate(diff));
+  return lunes.toISOString().split('T')[0];
+}
+
+// STOCK
+async function cargarStock(){
+  if(!currentUser) return;
+  const semana = getLunes();
+  const {data} = await supa.from('stock')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .eq('semana', semana)
+    .order('proveedor_nombre');
+  stockData = {};
+  (data||[]).forEach(item=>{stockData[item.producto_id]=item;});
+}
+
+async function abrirStock(){
+  document.getElementById('menu-panel').classList.remove('on');
+  await cargarStock();
+  renderStock();
+  document.getElementById('stock-panel').classList.add('on');
+}
+
+function cerrarStock(){
+  document.getElementById('stock-panel').classList.remove('on');
+}
+
+// Productos prioritarios de stock
+
+// ── 14. STOCK ────────────────────────────────────────────────────────────────
+const STOCK_PRIORITARIOS = [
+  'ventresca','vieira','lubina','hamashi','salmon','salmón','maguro',
+  'dashi','torpedo','mochi','yakinori','wagyu','cadera','lomo atun','lomo atún','atun rojo','atún rojo'
+];
+function esPrioritario(nombre, prodId){
+  if(prioritariosExtra.includes(prodId)) return true;
+  const n = nombre.toLowerCase();
+  return STOCK_PRIORITARIOS.some(p => n.includes(p));
+}
+
+function renderStock(){
+  const cont = document.getElementById('stock-content');
+  const items = Object.values(stockData);
+  if(!items.length){
+    cont.innerHTML='<div class="stock-empty">No hay stock esta semana.<br>Se acumula al enviar pedidos.</div>';
+    return;
+  }
+
+  // Separar prioritarios y resto
+  const prioritarios = items.filter(i=>esPrioritario(i.producto_nombre, i.producto_id));
+  const resto = items.filter(i=>!esPrioritario(i.producto_nombre, i.producto_id));
+
+  function grupoHTML(lista, titulo, estrella){
+    if(!lista.length) return '';
+    const grupos = {};
+    lista.forEach(i=>{
+      if(!grupos[i.proveedor_nombre]) grupos[i.proveedor_nombre]=[];
+      grupos[i.proveedor_nombre].push(i);
+    });
+    let html = `<div class="stock-seccion">${estrella?'⭐':''} ${titulo}</div>`;
+    for(const prov in grupos){
+      html+=`<div class="stock-semana">${prov}</div>`;
+      grupos[prov].forEach(item=>{
+        const pct = item.cantidad_pedida>0?(item.cantidad_restante/item.cantidad_pedida)*100:100;
+        const alerta = pct<25?'style="border-color:#c0392b"':pct<50?'style="border-color:#e67e22"':'';
+        const barColor = pct<25?'#c0392b':pct<50?'#e67e22':'#27ae60';
+        const esManual = prioritariosExtra.includes(item.producto_id);
+        html+=`<div class="stock-item" ${alerta}>
+          <div class="stock-item-row">
+            <div class="stock-item-info">
+              <div class="stock-item-name">
+                <button onclick="togglePrioritario('${item.producto_id}')" style="background:none;border:none;cursor:pointer;font-size:.6rem;padding:0 5px 0 0;opacity:${esManual?'1':'0.25'};color:#b8860b;line-height:1">★</button>
+                ${item.producto_nombre}
+              </div>
+              <div class="stock-item-prov">Pedido: ${item.cantidad_pedida} ${item.unidad}</div>
+            </div>
+            <div class="stock-item-controls">
+              <div class="stock-qrow">
+                <button class="stock-qb" onclick="chgStock('${item.producto_id}',-1)">−</button>
+                <input class="stock-qi" type="number" value="${item.cantidad_restante}" min="0"
+                  oninput="setStock('${item.producto_id}',this.value)" inputmode="decimal">
+                <button class="stock-qb" onclick="chgStock('${item.producto_id}',1)">+</button>
+              </div>
+              <div class="stock-pedido">${item.cantidad_restante} ${item.unidad} restantes</div>
+            </div>
+          </div>
+          <div class="stock-bar-wrap">
+            <div class="stock-bar" style="width:${Math.min(pct,100)}%;background:${barColor}"></div>
+          </div>
+        </div>`;
+      });
+    }
+    return html;
+  }
+
+  let html = `<div class="stock-semana">Semana del ${fmtS(new Date(getLunes()+'T12:00:00'))}</div>`;
+  html += grupoHTML(prioritarios, 'Productos clave', true);
+  if(resto.length){
+    html += `<div class="stock-seccion" style="margin-top:16px">📦 Resto de pedidos</div>`;
+    html += grupoHTML(resto, '', false);
+  }
+  html+=`<button class="stock-reset-btn" onclick="resetStock()">Resetear stock semanal</button>`;
+  html+=`<button class="stock-reset-btn" style="margin-top:8px;border-color:#b8860b;color:#b8860b" onclick="exportarStockPDF()">📄 Exportar PDF</button>`;
+  cont.innerHTML = html;
+}
+
+async function chgStock(prodId, delta){
+  if(!stockData[prodId]) return;
+  const nuevo = Math.max(0, (stockData[prodId].cantidad_restante||0) + delta);
+  stockData[prodId].cantidad_restante = nuevo;
+  await supa.from('stock').update({cantidad_restante:nuevo, updated_at:new Date().toISOString()}).eq('id',stockData[prodId].id);
+  renderStock();
+}
+
+async function setStock(prodId, val){
+  if(!stockData[prodId]) return;
+  const nuevo = Math.max(0, parseFloat(val)||0);
+  stockData[prodId].cantidad_restante = nuevo;
+  await supa.from('stock').update({cantidad_restante:nuevo, updated_at:new Date().toISOString()}).eq('id',stockData[prodId].id);
+}
+
+async function resetStock(){
+  if(!confirm('¿Resetear el stock de esta semana?')) return;
+  const semana = getLunes();
+  await supa.from('stock').delete().eq('user_id',currentUser.id).eq('semana',semana);
+  stockData = {};
+  renderStock();
+  showT('Stock reseteado');
+}
+
+function exportarStockPDF(){
+  const items = Object.values(stockData).filter(i=>esPrioritario(i.producto_nombre, i.producto_id));
+  if(!items.length){showT('No hay productos clave esta semana');return;}
+
+  const grupos = {};
+  items.forEach(i=>{
+    if(!grupos[i.proveedor_nombre]) grupos[i.proveedor_nombre]=[];
+    grupos[i.proveedor_nombre].push(i);
+  });
+
+  const semana = fmtS(new Date(getLunes()+'T12:00:00'));
+  let html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    body{font-family:Arial,sans-serif;padding:32px;color:#1a1a1a;max-width:700px;margin:0 auto}
+    h1{font-size:1.4rem;margin-bottom:4px}
+    .sub{font-size:.75rem;color:#888;margin-bottom:28px}
+    h2{font-size:.85rem;text-transform:uppercase;letter-spacing:.12em;color:#b8860b;border-bottom:1.5px solid #b8860b;padding-bottom:4px;margin-top:24px}
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    th{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#888;text-align:left;padding:6px 8px;border-bottom:1px solid #eee}
+    td{font-size:.82rem;padding:8px;border-bottom:1px solid #f0f0f0}
+    .bajo{color:#c0392b;font-weight:bold}
+    .medio{color:#e67e22}
+    .ok{color:#27ae60}
+    .footer{margin-top:40px;font-size:.65rem;color:#aaa;text-align:center}
+  </style></head><body>
+  <h1>⭐ Stock Productos Clave — MYO Handroll Bar</h1>
+  <div class="sub">Semana del ${semana} · Generado el ${new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>`;
+
+  for(const prov in grupos){
+    html+=`<h2>${prov}</h2><table>
+    <tr><th>Producto</th><th>Pedido</th><th>Restante</th><th>Consumo</th></tr>`;
+    grupos[prov].forEach(item=>{
+      const consumo = item.cantidad_pedida - item.cantidad_restante;
+      const pct = item.cantidad_pedida>0?(item.cantidad_restante/item.cantidad_pedida)*100:100;
+      const cls = pct<25?'bajo':pct<50?'medio':'ok';
+      html+=`<tr>
+        <td>${item.producto_nombre}</td>
+        <td>${item.cantidad_pedida} ${item.unidad}</td>
+        <td class="${cls}">${item.cantidad_restante} ${item.unidad}</td>
+        <td>${consumo.toFixed(2)} ${item.unidad}</td>
+      </tr>`;
+    });
+    html+=`</table>`;
+  }
+
+  html+=`<div class="footer">PedidosChef · MYO Handroll Bar · García de Paredes 63, Madrid</div></body></html>`;
+
+  const win = window.open('','_blank');
+  win.document.write(html);
+  win.document.close();
+  setTimeout(()=>win.print(),500);
+}
+
+// ── 15. UTILIDADES ───────────────────────────────────────────────────────────
+function showT(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),3000);}
+
+function calcStickyTop(){
+  const h=(document.querySelector('header')?.offsetHeight||0)
+         +(document.querySelector('.local-bar')?.offsetHeight||0)
+         +(document.querySelector('.search-bar')?.offsetHeight||0);
+  document.documentElement.style.setProperty('--acc-top', h+'px');
+}
+window.addEventListener('load', calcStickyTop);
+window.addEventListener('resize', calcStickyTop);
+setTimeout(calcStickyTop, 300);
+
+// ── 16. ARRANQUE ─────────────────────────────────────────────────────────────
+render();upd();
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js').catch(()=>{}); }
+if(sessionStorage.getItem('splash_shown')){
+  const s=document.getElementById('splash'); if(s) s.remove();
+} else {
+  sessionStorage.setItem('splash_shown','1');
+  setTimeout(()=>{ const s=document.getElementById('splash'); if(s){s.classList.add('hide');setTimeout(()=>s.remove(),700);} },4000);
+}
+document.addEventListener('DOMContentLoaded', ()=>{ checkSession(); });
+</script>
+</body>
+</html>
