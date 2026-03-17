@@ -303,7 +303,7 @@ main{padding:14px;max-width:960px;margin:0 auto}
 
 <div class="float-bar" id="float-bar" ontouchstart="event.stopPropagation()">
   <span class="float-bar-name" id="float-bar-name"></span>
-  <button class="float-bar-close" onclick="cerrarFloating()">✕ Cerrar</button>
+  <button class="float-bar-close" onclick="cerrarFloating()" ontouchend="event.preventDefault();cerrarFloating()">✕ Cerrar</button>
 </div>
 <div class="toast" id="toast"></div>
 
