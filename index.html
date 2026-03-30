@@ -1379,7 +1379,7 @@ async function guardarPedidoEnBD(prov, its){
   const productos = its.map(p=>({id:p.id,nombre:p.n,unidad:p.u,cantidad:Q[p.id],precio:p.p}));
   const total = productos.reduce((s,p)=>s+p.precio*p.cantidad,0);
 
-  // Guardar pedido
+  // Guardar pedido completo
   await supa.from('pedidos').insert({
     user_id: currentUser.id,
     proveedor_id: prov.id,
@@ -1389,8 +1389,11 @@ async function guardarPedidoEnBD(prov, its){
     total: total
   }).then(({error}) => { if(error) console.error('Error guardando pedido:', error); });
 
-  // Buscar todos los registros de stock de estos productos de una sola vez
-  const ids = productos.map(p => p.id);
+  // Solo guardar en stock los productos prioritarios
+  const productosStock = productos.filter(p => esPrioritario(p.nombre, p.id));
+  if(!productosStock.length) return;
+
+  const ids = productosStock.map(p => p.id);
   const {data: stockExistente} = await supa.from('stock')
     .select('*')
     .eq('user_id', currentUser.id)
@@ -1400,8 +1403,7 @@ async function guardarPedidoEnBD(prov, its){
   const mapaStock = {};
   (stockExistente || []).forEach(s => { mapaStock[s.producto_id] = s; });
 
-  // Updates e inserts en paralelo
-  await Promise.all(productos.map(p => {
+  await Promise.all(productosStock.map(p => {
     const existente = mapaStock[p.id];
     if(existente){
       return supa.from('stock').update({
