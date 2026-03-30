@@ -720,6 +720,28 @@ let productosOcultos = JSON.parse(localStorage.getItem('productos_ocultos')||'[]
 function saveOcultos(){localStorage.setItem('productos_ocultos', JSON.stringify(productosOcultos));}
 function saveQ(){localStorage.setItem('pedido_q', JSON.stringify(Q));}
 
+// Guardar y cargar productos custom (añadidos manualmente)
+function saveProductosCustom(){
+  const custom = [];
+  PROVEEDORES.forEach(prov=>{
+    prov.productos.filter(p=>p.id.includes('_C')).forEach(p=>{
+      custom.push({provId:prov.id, producto:p});
+    });
+  });
+  localStorage.setItem('productos_custom', JSON.stringify(custom));
+}
+function cargarProductosCustom(){
+  const custom = JSON.parse(localStorage.getItem('productos_custom')||'[]');
+  custom.forEach(({provId, producto})=>{
+    const prov = PROVEEDORES.find(p=>p.id===provId);
+    if(!prov) return;
+    if(!prov.productos.find(p=>p.id===producto.id)){
+      prov.productos.push(producto);
+      prov.productos.sort((a,b)=>a.n.toLowerCase().localeCompare(b.n.toLowerCase()));
+    }
+  });
+}
+
 // Actualiza el contador de productos visibles de un proveedor
 function actualizarContador(provId){
   const prov = PROVEEDORES.find(p=>p.id===provId); if(!prov) return;
@@ -1029,7 +1051,11 @@ function cerrarFloating(){
 
 // ── 7. CANTIDADES ────────────────────────────────────────────────────────────
 function chg(id,d){const v=Math.max(0,(Q[id]||0)+d);Q[id]=v;const i=document.getElementById('q'+id);if(i)i.value=v;const r=document.getElementById('r'+id);if(r)r.className='pr'+(v>0?' sel':'');updBadges();upd();saveQ();}
-function setq(id,v){const n=Math.max(0,parseInt(v)||0);Q[id]=n;const r=document.getElementById('r'+id);if(r)r.className='pr'+(n>0?' sel':'');updBadges();upd();saveQ();}
+function setq(id,v){const n=Math.max(0,parseFloat(v)||0);Q[id]=n;const r=document.getElementById('r'+id);if(r)r.className='pr'+(n>0?' sel':'');updBadges();upd();saveQ();}
+
+// Guardar carrito cuando la app pasa a segundo plano
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') saveQ(); });
+window.addEventListener('pagehide', ()=>{ saveQ(); });
 function rst(){Object.keys(Q).forEach(k=>delete Q[k]);render();upd();}
 function toggleUnit(provId, prodId){
   const prov = PROVEEDORES.find(p=>p.id===provId);
@@ -1144,6 +1170,7 @@ function guardarNuevo(){
   cerrarNuevo();
   renderProds(prov);
   actualizarContador(prov.id);
+  saveProductosCustom();
   showT('✓ Producto añadido a '+prov.nombre);
 }
 
@@ -1176,6 +1203,7 @@ function guardarEditor(){
   if(nuevoPrecio>0) prod.nota = (['kg','l'].includes(prod.u))?'/'+prod.u:'';
   cerrarEditor();
   renderProds(prov);
+  saveProductosCustom();
   showT('Producto actualizado');
 }
 function borrarProductoEditor(){
@@ -1187,7 +1215,7 @@ function borrarProductoEditor(){
   cerrarEditor();
   prov.productos = prov.productos.filter(p=>p.id!==prodId);
   productosOcultos = productosOcultos.filter(id=>id!==prodId);
-  delete Q[prodId]; saveQ(); saveOcultos();
+  delete Q[prodId]; saveQ(); saveOcultos(); saveProductosCustom();
   renderProds(prov);
   updBadges(); upd();
   actualizarContador(prov.id);
@@ -1604,6 +1632,7 @@ window.addEventListener('resize', calcStickyTop);
 setTimeout(calcStickyTop, 300);
 
 // ── 16. ARRANQUE ─────────────────────────────────────────────────────────────
+cargarProductosCustom(); // cargar productos añadidos manualmente
 render();upd();
 
 // Botón cerrar proveedor
