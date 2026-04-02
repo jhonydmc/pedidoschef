@@ -1618,11 +1618,25 @@ async function resetStock(){
 }
 
 function exportarStockPDF(){
-  const items = Object.values(stockData).filter(i=>esPrioritario(i.producto_nombre, i.producto_id));
-  if(!items.length){showT('No hay productos clave esta semana');return;}
+  // Incluir todos los productos prioritarios aunque no se hayan pedido
+  const todosPrio = [];
+  PROVEEDORES.forEach(prov=>{
+    prov.productos.forEach(p=>{
+      if(esPrioritario(p.n, p.id)){
+        const enStock = stockData[p.id];
+        todosPrio.push({
+          producto_nombre: p.n,
+          proveedor_nombre: prov.nombre,
+          unidad: p.u,
+          cantidad_restante: enStock ? enStock.cantidad_restante : '—'
+        });
+      }
+    });
+  });
+  if(!todosPrio.length){ showT('No hay productos clave'); return; }
 
   const grupos = {};
-  items.forEach(i=>{
+  todosPrio.forEach(i=>{
     if(!grupos[i.proveedor_nombre]) grupos[i.proveedor_nombre]=[];
     grupos[i.proveedor_nombre].push(i);
   });
@@ -1630,34 +1644,23 @@ function exportarStockPDF(){
   const semana = fmtS(new Date(getLunes()+'T12:00:00'));
   let html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
   <style>
-    body{font-family:Arial,sans-serif;padding:32px;color:#1a1a1a;max-width:700px;margin:0 auto}
-    h1{font-size:1.4rem;margin-bottom:4px}
-    .sub{font-size:.75rem;color:#888;margin-bottom:28px}
-    h2{font-size:.85rem;text-transform:uppercase;letter-spacing:.12em;color:#b8860b;border-bottom:1.5px solid #b8860b;padding-bottom:4px;margin-top:24px}
-    table{width:100%;border-collapse:collapse;margin-top:8px}
-    th{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#888;text-align:left;padding:6px 8px;border-bottom:1px solid #eee}
-    td{font-size:.82rem;padding:8px;border-bottom:1px solid #f0f0f0}
-    .bajo{color:#c0392b;font-weight:bold}
-    .medio{color:#e67e22}
-    .ok{color:#27ae60}
-    .footer{margin-top:40px;font-size:.65rem;color:#aaa;text-align:center}
+    body{font-family:Arial,sans-serif;padding:32px;color:#1a1a1a;max-width:600px;margin:0 auto}
+    h1{font-size:1.2rem;margin-bottom:4px}
+    .sub{font-size:.72rem;color:#888;margin-bottom:24px}
+    h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.12em;color:#b8860b;border-bottom:1.5px solid #b8860b;padding-bottom:4px;margin-top:24px;margin-bottom:8px}
+    table{width:100%;border-collapse:collapse}
+    td{font-size:.85rem;padding:9px 6px;border-bottom:1px solid #f0f0f0}
+    td:last-child{text-align:right;font-weight:600;white-space:nowrap}
+    .footer{margin-top:40px;font-size:.6rem;color:#aaa;text-align:center}
   </style></head><body>
-  <h1>⭐ Stock Productos Clave — MYO Handroll Bar</h1>
-  <div class="sub">Semana del ${semana} · Generado el ${new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>`;
+  <h1>⭐ Productos Clave — MYO Handroll Bar</h1>
+  <div class="sub">Semana del ${semana} · ${new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>`;
 
   for(const prov in grupos){
-    html+=`<h2>${prov}</h2><table>
-    <tr><th>Producto</th><th>Pedido</th><th>Restante</th><th>Consumo</th></tr>`;
+    html+=`<h2>${prov}</h2><table>`;
     grupos[prov].forEach(item=>{
-      const consumo = item.cantidad_pedida - item.cantidad_restante;
-      const pct = item.cantidad_pedida>0?(item.cantidad_restante/item.cantidad_pedida)*100:100;
-      const cls = pct<25?'bajo':pct<50?'medio':'ok';
-      html+=`<tr>
-        <td>${item.producto_nombre}</td>
-        <td>${item.cantidad_pedida} ${item.unidad}</td>
-        <td class="${cls}">${item.cantidad_restante} ${item.unidad}</td>
-        <td>${consumo.toFixed(2)} ${item.unidad}</td>
-      </tr>`;
+      const cantidad = item.cantidad_restante === '—' ? '—' : `${item.cantidad_restante} ${item.unidad}`;
+      html+=`<tr><td>${item.producto_nombre}</td><td>${cantidad}</td></tr>`;
     });
     html+=`</table>`;
   }
