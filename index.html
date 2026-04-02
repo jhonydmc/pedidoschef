@@ -1476,65 +1476,83 @@ function esPrioritario(nombre, prodId){
 
 function renderStock(){
   const cont = document.getElementById('stock-content');
-  const items = Object.values(stockData);
-  if(!items.length){
-    cont.innerHTML='<div class="stock-empty">No hay stock esta semana.<br>Se acumula al enviar pedidos.</div>';
-    return;
-  }
 
-  // Separar prioritarios y resto
-  const prioritarios = items.filter(i=>esPrioritario(i.producto_nombre, i.producto_id));
-  const resto = items.filter(i=>!esPrioritario(i.producto_nombre, i.producto_id));
-
-  function grupoHTML(lista, titulo, estrella){
-    if(!lista.length) return '';
-    const grupos = {};
-    lista.forEach(i=>{
-      if(!grupos[i.proveedor_nombre]) grupos[i.proveedor_nombre]=[];
-      grupos[i.proveedor_nombre].push(i);
+  // Construir lista completa de productos prioritarios de todos los proveedores
+  const todosPrioritarios = [];
+  PROVEEDORES.forEach(prov=>{
+    prov.productos.forEach(p=>{
+      if(esPrioritario(p.n, p.id)){
+        const enStock = stockData[p.id];
+        todosPrioritarios.push({
+          producto_id:   p.id,
+          producto_nombre: p.n,
+          unidad:        p.u,
+          proveedor_nombre: prov.nombre,
+          cantidad_pedida:   enStock ? enStock.cantidad_pedida   : 0,
+          cantidad_restante: enStock ? enStock.cantidad_restante : 0,
+          id:            enStock ? enStock.id : null,
+          sinPedir:      !enStock
+        });
+      }
     });
-    let html = `<div class="stock-seccion">${estrella?'⭐':''} ${titulo}</div>`;
-    for(const prov in grupos){
-      html+=`<div class="stock-semana">${prov}</div>`;
-      grupos[prov].forEach(item=>{
-        const pct = item.cantidad_pedida>0?(item.cantidad_restante/item.cantidad_pedida)*100:100;
-        const alerta = pct<25?'style="border-color:#c0392b"':pct<50?'style="border-color:#e67e22"':'';
-        const barColor = pct<25?'#c0392b':pct<50?'#e67e22':'#27ae60';
-        const esManual = prioritariosExtra.includes(item.producto_id);
-        html+=`<div class="stock-item" ${alerta}>
-          <div class="stock-item-row">
-            <div class="stock-item-info">
-              <div class="stock-item-name">
-                <button onclick="togglePrioritario('${item.producto_id}')" style="background:none;border:none;cursor:pointer;font-size:.6rem;padding:0 5px 0 0;opacity:${esManual?'1':'0.25'};color:#b8860b;line-height:1">★</button>
-                ${item.producto_nombre}
-              </div>
-              <div class="stock-item-prov">Pedido: ${item.cantidad_pedida} ${item.unidad}</div>
-            </div>
-            <div class="stock-item-controls">
-              <div class="stock-qrow">
-                <button class="stock-qb" onclick="chgStock('${item.producto_id}',-1)">−</button>
-                <input class="stock-qi" type="number" value="${item.cantidad_restante}" min="0"
-                  oninput="setStock('${item.producto_id}',this.value)" inputmode="decimal">
-                <button class="stock-qb" onclick="chgStock('${item.producto_id}',1)">+</button>
-              </div>
-              <div class="stock-pedido">${item.cantidad_restante} ${item.unidad} restantes</div>
-            </div>
-          </div>
-          <div class="stock-bar-wrap">
-            <div class="stock-bar" style="width:${Math.min(pct,100)}%;background:${barColor}"></div>
-          </div>
-        </div>`;
-      });
-    }
-    return html;
-  }
+  });
+
+  // Agrupar por proveedor
+  const grupos = {};
+  todosPrioritarios.forEach(item=>{
+    if(!grupos[item.proveedor_nombre]) grupos[item.proveedor_nombre]=[];
+    grupos[item.proveedor_nombre].push(item);
+  });
 
   let html = `<div class="stock-semana">Semana del ${fmtS(new Date(getLunes()+'T12:00:00'))}</div>`;
-  html += grupoHTML(prioritarios, 'Productos clave', true);
-  if(resto.length){
-    html += `<div class="stock-seccion" style="margin-top:16px">📦 Resto de pedidos</div>`;
-    html += grupoHTML(resto, '', false);
+  html += `<div class="stock-seccion">⭐ Productos clave</div>`;
+
+  for(const provNombre in grupos){
+    html += `<div class="stock-semana">${provNombre}</div>`;
+    grupos[provNombre].forEach(item=>{
+      const pct = item.cantidad_pedida > 0 ? (item.cantidad_restante/item.cantidad_pedida)*100 : 0;
+      const alerta = item.sinPedir ? '' : pct<25 ? 'style="border-color:#c0392b"' : pct<50 ? 'style="border-color:#e67e22"' : '';
+      const barColor = item.sinPedir ? '#e0e0dc' : pct<25 ? '#c0392b' : pct<50 ? '#e67e22' : '#27ae60';
+      const barWidth = item.sinPedir ? 100 : Math.min(pct,100);
+      const esManual = prioritariosExtra.includes(item.producto_id);
+      const labelPedido = item.sinPedir ? 'Sin pedir esta semana' : `Pedido: ${item.cantidad_pedida} ${item.unidad}`;
+      const labelRestante = item.sinPedir ? '—' : `${item.cantidad_restante} ${item.unidad} restantes`;
+
+      // Controles siempre activos — para inventario aunque no se haya pedido
+      const controles = item.sinPedir
+        ? `<div class="stock-qrow">
+            <button class="stock-qb" onclick="chgStockManual('${item.producto_id}','${item.producto_nombre}','${item.unidad}','${item.proveedor_nombre}',-1)">−</button>
+            <input class="stock-qi" type="number" value="0" min="0"
+              oninput="setStockManual('${item.producto_id}','${item.producto_nombre}','${item.unidad}','${item.proveedor_nombre}',this.value)" inputmode="decimal">
+            <button class="stock-qb" onclick="chgStockManual('${item.producto_id}','${item.producto_nombre}','${item.unidad}','${item.proveedor_nombre}',1)">+</button>
+          </div>
+          <div class="stock-pedido" style="color:var(--d);font-style:italic">Sin pedir — inventario manual</div>`
+        : `<div class="stock-qrow">
+            <button class="stock-qb" onclick="chgStock('${item.producto_id}',-1)">−</button>
+            <input class="stock-qi" type="number" value="${item.cantidad_restante}" min="0"
+              oninput="setStock('${item.producto_id}',this.value)" inputmode="decimal">
+            <button class="stock-qb" onclick="chgStock('${item.producto_id}',1)">+</button>
+          </div>
+          <div class="stock-pedido">${labelRestante}</div>`;
+
+      html+=`<div class="stock-item" ${alerta}>
+        <div class="stock-item-row">
+          <div class="stock-item-info">
+            <div class="stock-item-name">
+              <button onclick="togglePrioritario('${item.producto_id}')" style="background:none;border:none;cursor:pointer;font-size:.6rem;padding:0 5px 0 0;opacity:${esManual?'1':'0.25'};color:#b8860b;line-height:1">★</button>
+              ${item.producto_nombre}
+            </div>
+            <div class="stock-item-prov">${labelPedido}</div>
+          </div>
+          <div class="stock-item-controls">${controles}</div>
+        </div>
+        <div class="stock-bar-wrap">
+          <div class="stock-bar" style="width:${barWidth}%;background:${barColor}"></div>
+        </div>
+      </div>`;
+    });
   }
+
   html+=`<button class="stock-reset-btn" onclick="resetStock()">Resetear stock semanal</button>`;
   html+=`<button class="stock-reset-btn" style="margin-top:8px;border-color:#b8860b;color:#b8860b" onclick="exportarStockPDF()">📄 Exportar PDF</button>`;
   cont.innerHTML = html;
@@ -1555,6 +1573,38 @@ async function setStock(prodId, val){
   stockData[prodId].cantidad_restante = nuevo;
   const {error} = await supa.from('stock').update({cantidad_restante:nuevo, updated_at:new Date().toISOString()}).eq('id',stockData[prodId].id);
   if(error){ console.error('Error actualizando stock:', error); }
+}
+
+// Crear registro manual para productos no pedidos (inventario)
+async function crearStockManual(prodId, nombre, unidad, provNombre, cantidad){
+  if(!currentUser) return;
+  const semana = getLunes();
+  const {data, error} = await supa.from('stock').insert({
+    user_id: currentUser.id,
+    semana: semana,
+    producto_id: prodId,
+    producto_nombre: nombre,
+    unidad: unidad,
+    cantidad_pedida: 0,
+    cantidad_restante: cantidad,
+    proveedor_nombre: provNombre
+  }).select().single();
+  if(error){ console.error('Error creando stock manual:', error); return null; }
+  return data;
+}
+async function chgStockManual(prodId, nombre, unidad, provNombre, delta){
+  if(stockData[prodId]){ chgStock(prodId, delta); return; }
+  const nuevo = Math.max(0, delta);
+  if(nuevo === 0) return;
+  const data = await crearStockManual(prodId, nombre, unidad, provNombre, nuevo);
+  if(data){ stockData[prodId] = data; renderStock(); }
+}
+async function setStockManual(prodId, nombre, unidad, provNombre, val){
+  const nuevo = Math.max(0, parseFloat(val)||0);
+  if(stockData[prodId]){ setStock(prodId, val); return; }
+  if(nuevo === 0) return;
+  const data = await crearStockManual(prodId, nombre, unidad, provNombre, nuevo);
+  if(data){ stockData[prodId] = data; }
 }
 
 async function resetStock(){
