@@ -331,6 +331,7 @@ main{padding:14px;max-width:960px;margin:0 auto}
 <!-- MENU DESPLEGABLE -->
 <div class="menu-panel" id="menu-panel">
   <button class="menu-item" onclick="abrirStock()">📦 Ver stock</button>
+  <button class="menu-item" onclick="abrirAlbaran();document.getElementById('menu-panel').classList.remove('on')">📷 Escanear albarán</button>
   <button class="menu-item" onclick="abrirRestaurar();document.getElementById('menu-panel').classList.remove('on')">↩️ Restaurar ocultos</button>
   <button class="menu-item danger" onclick="doLogout()">Cerrar sesión</button>
 </div>
@@ -343,6 +344,8 @@ main{padding:14px;max-width:960px;margin:0 auto}
     <input type="hidden" id="ed-prodid">
     <label class="mlb">Nombre</label>
     <input class="mi" id="ed-nombre" type="text" autocomplete="off">
+    <label class="mlb">Unidad de pedido</label>
+    <input class="mi" id="ed-unidad" type="text" placeholder="Ej: kg, ud, bote 125gr..." autocomplete="off">
     <label class="mlb">Precio (€)</label>
     <input class="mi" id="ed-precio" type="number" step="0.01" min="0" placeholder="0.00" inputmode="decimal">
     <div class="acts" style="margin-top:16px;margin-bottom:0;gap:8px;flex-wrap:wrap">
@@ -350,6 +353,36 @@ main{padding:14px;max-width:960px;margin:0 auto}
       <button class="btn bp" onclick="guardarEditor()">Guardar</button>
     </div>
     <button id="ed-borrar" onclick="borrarProductoEditor()" style="display:none;width:100%;margin-top:10px;background:none;border:1px solid var(--r);color:var(--r);border-radius:4px;padding:8px;font-size:.72rem;cursor:pointer;font-family:'DM Mono',monospace">Eliminar producto</button>
+  </div>
+</div>
+
+<!-- MODAL: ESCANEAR ALBARÁN -->
+<div class="mo" id="mo-albaran">
+  <div class="mdl" style="max-height:88vh;display:flex;flex-direction:column">
+    <div class="mtt">📷 Escanear albarán</div>
+    <div class="msb">Haz una foto al albarán. La IA detectará el proveedor, productos y precios automáticamente.</div>
+
+    <div id="albaran-upload-area" style="border:2px dashed var(--b2);border-radius:12px;padding:24px;text-align:center;cursor:pointer;margin-bottom:12px" onclick="document.getElementById('albaran-input').click()">
+      <div style="font-size:2rem;margin-bottom:8px">📄</div>
+      <div style="font-size:.78rem;color:var(--d)">Pulsa para hacer foto o seleccionar imagen</div>
+      <input type="file" id="albaran-input" accept="image/*" capture="environment" style="display:none" onchange="procesarAlbaran(this)">
+    </div>
+
+    <div id="albaran-preview" style="display:none;margin-bottom:12px">
+      <img id="albaran-img" style="width:100%;border-radius:8px;max-height:180px;object-fit:cover">
+    </div>
+
+    <div id="albaran-loading" style="display:none;text-align:center;padding:20px;color:var(--d);font-size:.78rem">
+      <div style="margin-bottom:8px">🔍 Analizando albarán...</div>
+      <div style="font-size:.65rem">La IA está leyendo los productos y precios</div>
+    </div>
+
+    <div id="albaran-resultado" style="display:none;overflow-y:auto;flex:1"></div>
+
+    <div class="acts" style="margin-top:12px;margin-bottom:0">
+      <button class="btn bs" onclick="cerrarAlbaran()">Cancelar</button>
+      <button class="btn bp" id="btn-confirmar-albaran" style="display:none" onclick="confirmarAlbaran()">Añadir productos ✓</button>
+    </div>
   </div>
 </div>
 
@@ -1193,42 +1226,43 @@ function guardarNuevo(){
 
 // ── 11. EDITAR Y OCULTAR PRODUCTOS ───────────────────────────────────────────
 function abrirEditorProducto(provId, prodId){
-  const prov = PROVEEDORES.find(p=>p.id===provId);
-  if(!prov) return;
-  const prod = prov.productos.find(p=>p.id===prodId);
-  if(!prod) return;
+  const prov = PROVEEDORES.find(p=>p.id===provId); if(!prov) return;
+  const prod = prov.productos.find(p=>p.id===prodId); if(!prod) return;
   const esCustom = prodId.includes('_C');
   document.getElementById('ed-nombre').value = prod.n;
+  document.getElementById('ed-unidad').value = prod.u;
   document.getElementById('ed-precio').value = prod.p || '';
   document.getElementById('ed-borrar').style.display = esCustom ? 'block' : 'none';
   document.getElementById('ed-provid').value = provId;
   document.getElementById('ed-prodid').value = prodId;
-  document.getElementById('mo-editor').classList.add('on');document.body.style.overflow='hidden';
+  document.getElementById('mo-editor').classList.add('on');
+  document.body.style.overflow='hidden';
+  document.getElementById('float-bar').style.display='none';
 }
 function guardarEditor(){
   const provId = document.getElementById('ed-provid').value;
   const prodId = document.getElementById('ed-prodid').value;
-  const prov = PROVEEDORES.find(p=>p.id===provId);
-  if(!prov) return;
-  const prod = prov.productos.find(p=>p.id===prodId);
-  if(!prod) return;
-  const nuevoNombre = document.getElementById('ed-nombre').value.trim();
-  const nuevoPrecio = parseFloat(document.getElementById('ed-precio').value)||0;
-  if(!nuevoNombre){showT('El nombre no puede estar vacío');return;}
+  const prov = PROVEEDORES.find(p=>p.id===provId); if(!prov) return;
+  const prod = prov.productos.find(p=>p.id===prodId); if(!prod) return;
+  const nuevoNombre  = document.getElementById('ed-nombre').value.trim();
+  const nuevaUnidad  = document.getElementById('ed-unidad').value.trim();
+  const nuevoPrecio  = parseFloat(document.getElementById('ed-precio').value)||0;
+  if(!nuevoNombre){ showT('El nombre no puede estar vacío'); return; }
+  if(!nuevaUnidad){  showT('La unidad no puede estar vacía');  return; }
   prod.n = nuevoNombre;
+  prod.u = nuevaUnidad;
   prod.p = nuevoPrecio;
-  if(nuevoPrecio>0) prod.nota = (['kg','l'].includes(prod.u))?'/'+prod.u:'';
+  prod.nota = nuevoPrecio>0 && ['kg','l'].includes(nuevaUnidad) ? '/'+nuevaUnidad : '';
   cerrarEditor();
   renderProds(prov);
   saveProductosCustom();
+  saveUnidades();
   showT('Producto actualizado');
 }
 function borrarProductoEditor(){
   const provId = document.getElementById('ed-provid').value;
   const prodId = document.getElementById('ed-prodid').value;
-  const prov = PROVEEDORES.find(p=>p.id===provId);
-  if(!prov) return;
-  const prod = prov.productos.find(p=>p.id===prodId);
+  const prov = PROVEEDORES.find(p=>p.id===provId); if(!prov) return;
   cerrarEditor();
   prov.productos = prov.productos.filter(p=>p.id!==prodId);
   productosOcultos = productosOcultos.filter(id=>id!==prodId);
@@ -1238,7 +1272,11 @@ function borrarProductoEditor(){
   actualizarContador(prov.id);
   showT('Producto eliminado');
 }
-function cerrarEditor(){document.getElementById('mo-editor').classList.remove('on');document.body.style.overflow='';}
+function cerrarEditor(){
+  document.getElementById('mo-editor').classList.remove('on');
+  document.body.style.overflow='';
+  document.getElementById('float-bar').style.display='';
+}
 
 function ocultarProducto(provId, prodId){
   if(!productosOcultos.includes(prodId)) productosOcultos.push(prodId);
@@ -1271,9 +1309,15 @@ function abrirRestaurar(){
       lista.appendChild(row);
     });
   }
-  document.getElementById('mo-restaurar').classList.add('on');document.body.style.overflow='hidden';
+  document.getElementById('mo-restaurar').classList.add('on');
+  document.body.style.overflow='hidden';
+  document.getElementById('float-bar').style.display='none';
 }
-function cerrarRestaurar(){document.getElementById('mo-restaurar').classList.remove('on');document.body.style.overflow='';}
+function cerrarRestaurar(){
+  document.getElementById('mo-restaurar').classList.remove('on');
+  document.body.style.overflow='';
+  document.getElementById('float-bar').style.display='';
+}
 function restaurarUno(prodId){
   productosOcultos = productosOcultos.filter(id=>id!==prodId);
   saveOcultos();
@@ -1304,6 +1348,7 @@ function openM(){
   renderSendList();
   document.getElementById('mo').classList.add('on');
   document.body.style.overflow='hidden';
+  document.getElementById('float-bar').style.display='none';
 }
 
 function renderSendList(){
@@ -1386,7 +1431,11 @@ async function enviarSiguiente(){
   });
 }
 
-function closeM(){document.getElementById('mo').classList.remove('on');document.body.style.overflow='';}
+function closeM(){
+  document.getElementById('mo').classList.remove('on');
+  document.body.style.overflow='';
+  document.getElementById('float-bar').style.display='';
+}
 
 
 // ── 13. BASE DE DATOS (SUPABASE) ─────────────────────────────────────────────
@@ -1702,6 +1751,213 @@ function calcStickyTop(){
 window.addEventListener('load', calcStickyTop);
 window.addEventListener('resize', calcStickyTop);
 setTimeout(calcStickyTop, 300);
+
+// ── ESCÁNER DE ALBARANES (IA) ─────────────────────────────────────────────────
+let albaranDetectado = null;
+
+function abrirAlbaran(){
+  albaranDetectado = null;
+  document.getElementById('albaran-preview').style.display='none';
+  document.getElementById('albaran-loading').style.display='none';
+  document.getElementById('albaran-resultado').style.display='none';
+  document.getElementById('btn-confirmar-albaran').style.display='none';
+  document.getElementById('albaran-upload-area').style.display='block';
+  document.getElementById('albaran-input').value='';
+  document.getElementById('mo-albaran').classList.add('on');
+  document.body.style.overflow='hidden';
+  document.getElementById('float-bar').style.display='none';
+}
+function cerrarAlbaran(){
+  document.getElementById('mo-albaran').classList.remove('on');
+  document.body.style.overflow='';
+  document.getElementById('float-bar').style.display='';
+}
+
+async function procesarAlbaran(input){
+  const file = input.files[0];
+  if(!file) return;
+
+  // Mostrar preview
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('albaran-img').src = e.target.result;
+    document.getElementById('albaran-preview').style.display='block';
+  };
+  reader.readAsDataURL(file);
+
+  // Mostrar loading
+  document.getElementById('albaran-upload-area').style.display='none';
+  document.getElementById('albaran-loading').style.display='block';
+  document.getElementById('albaran-resultado').style.display='none';
+  document.getElementById('btn-confirmar-albaran').style.display='none';
+
+  try {
+    // Convertir imagen a base64
+    const base64 = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result.split(',')[1]);
+      r.onerror = () => rej(new Error('Error leyendo imagen'));
+      r.readAsDataURL(file);
+    });
+
+    // Lista de proveedores conocidos para ayudar a la IA
+    const proveedoresConocidos = PROVEEDORES.map(p => p.nombre).join(', ');
+
+    // Llamar a Claude con visión
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: file.type, data: base64 }
+            },
+            {
+              type: 'text',
+              text: `Eres un asistente para un restaurante. Analiza este albarán de entrega y extrae la información.
+
+Proveedores conocidos del restaurante: ${proveedoresConocidos}
+
+Responde SOLO con un JSON válido, sin texto adicional, con esta estructura exacta:
+{
+  "proveedor": "nombre del proveedor tal como aparece en la lista de proveedores conocidos, o el nombre que aparece en el albarán si no coincide",
+  "proveedor_id": "id del proveedor si coincide con uno de la lista (food, frutaseloy, serpeska, leikan, prodesco, cominport, tokyoya, jenquimica, kemikal, beeonfood, beran, trueworldfoods), o null si no coincide",
+  "fecha": "fecha del albarán en formato DD/MM/YYYY o null",
+  "productos": [
+    {
+      "nombre": "nombre del producto",
+      "cantidad": número,
+      "unidad": "kg, ud, bote, bolsa, etc",
+      "precio_unitario": número o null,
+      "es_nuevo": true o false (true si no parece estar en la lista habitual)
+    }
+  ]
+}`
+            }
+          ]
+        }]
+      })
+    });
+
+    const data = await response.json();
+    const texto = data.content?.[0]?.text || '';
+    const clean = texto.replace(/```json|```/g,'').trim();
+    albaranDetectado = JSON.parse(clean);
+
+    mostrarResultadoAlbaran(albaranDetectado);
+
+  } catch(err) {
+    console.error('Error procesando albarán:', err);
+    document.getElementById('albaran-loading').style.display='none';
+    document.getElementById('albaran-resultado').style.display='block';
+    document.getElementById('albaran-resultado').innerHTML =
+      '<div style="color:var(--r);font-size:.78rem;padding:12px">⚠ No se pudo leer el albarán. Comprueba que la imagen sea clara y vuelve a intentarlo.</div>';
+  }
+}
+
+function mostrarResultadoAlbaran(datos){
+  document.getElementById('albaran-loading').style.display='none';
+  const cont = document.getElementById('albaran-resultado');
+  cont.style.display='block';
+
+  let html = `<div style="font-size:.7rem;color:var(--d);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Resultado del análisis</div>`;
+
+  // Proveedor detectado
+  const provColor = datos.proveedor_id ? 'var(--a2)' : 'var(--r)';
+  html += `<div style="background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:12px">
+    <div style="font-size:.65rem;color:var(--d)">Proveedor detectado</div>
+    <div style="font-size:.88rem;font-weight:500;color:${provColor}">${datos.proveedor || 'No detectado'}</div>
+    ${datos.fecha ? `<div style="font-size:.65rem;color:var(--d);margin-top:2px">Fecha: ${datos.fecha}</div>` : ''}
+    ${!datos.proveedor_id ? '<div style="font-size:.65rem;color:var(--r);margin-top:2px">⚠ No coincide con ningún proveedor registrado</div>' : ''}
+  </div>`;
+
+  // Productos detectados
+  if(datos.productos && datos.productos.length){
+    html += `<div style="font-size:.7rem;color:var(--d);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">Productos detectados (${datos.productos.length})</div>`;
+    datos.productos.forEach((p, i) => {
+      const esNuevo = p.es_nuevo;
+      const badge = esNuevo
+        ? '<span style="background:#e8f5e9;color:#27ae60;font-size:.55rem;padding:2px 6px;border-radius:4px;margin-left:6px">NUEVO</span>'
+        : '';
+      const precio = p.precio_unitario ? `${p.precio_unitario.toFixed(2)} €` : '—';
+      html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--b);gap:8px">
+        <div style="flex:1">
+          <div style="font-size:.8rem;color:var(--t)">${p.nombre}${badge}</div>
+          <div style="font-size:.62rem;color:var(--d);margin-top:2px">${p.cantidad} ${p.unidad} · ${precio}/ud</div>
+        </div>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="checkbox" id="albaran-check-${i}" checked style="width:16px;height:16px;cursor:pointer">
+        </label>
+      </div>`;
+    });
+  } else {
+    html += '<div style="color:var(--d);font-size:.78rem;padding:8px 0">No se detectaron productos en el albarán.</div>';
+  }
+
+  cont.innerHTML = html;
+
+  if(datos.productos && datos.productos.length && datos.proveedor_id){
+    document.getElementById('btn-confirmar-albaran').style.display='block';
+  }
+}
+
+function confirmarAlbaran(){
+  if(!albaranDetectado || !albaranDetectado.proveedor_id) return;
+  const prov = PROVEEDORES.find(p=>p.id===albaranDetectado.proveedor_id);
+  if(!prov){ showT('Proveedor no encontrado'); return; }
+
+  let añadidos = 0;
+  let actualizados = 0;
+
+  albaranDetectado.productos.forEach((p, i) => {
+    const checkbox = document.getElementById(`albaran-check-${i}`);
+    if(!checkbox || !checkbox.checked) return;
+
+    // Buscar si el producto ya existe (por nombre similar)
+    const nombreLower = p.nombre.toLowerCase();
+    const existente = prov.productos.find(prod =>
+      prod.n.toLowerCase().includes(nombreLower.substring(0,10)) ||
+      nombreLower.includes(prod.n.toLowerCase().substring(0,10))
+    );
+
+    if(existente){
+      // Actualizar precio si se detectó
+      if(p.precio_unitario && p.precio_unitario > 0){
+        existente.p = p.precio_unitario;
+        existente.nota = ['kg','l'].includes(existente.u) ? '/'+existente.u : '';
+        actualizados++;
+      }
+    } else {
+      // Añadir producto nuevo
+      const newId = prov.id.toUpperCase().slice(0,4)+'_C'+Date.now().toString().slice(-4)+i;
+      prov.productos.push({
+        id: newId,
+        n: p.nombre,
+        u: p.unidad || 'ud',
+        p: p.precio_unitario || 0,
+        nota: p.precio_unitario>0 && ['kg','l'].includes(p.unidad||'') ? '/'+(p.unidad||'') : ''
+      });
+      prov.productos.sort((a,b)=>a.n.toLowerCase().localeCompare(b.n.toLowerCase()));
+      añadidos++;
+    }
+  });
+
+  saveProductosCustom();
+  saveUnidades();
+  renderProds(prov);
+  actualizarContador(prov.id);
+  cerrarAlbaran();
+
+  const msg = [];
+  if(añadidos) msg.push(`${añadidos} producto${añadidos>1?'s':''} añadido${añadidos>1?'s':''}`);
+  if(actualizados) msg.push(`${actualizados} precio${actualizados>1?'s':''} actualizado${actualizados>1?'s':''}`);
+  showT('✓ '+msg.join(' · '));
+}
 
 // ── 16. ARRANQUE ─────────────────────────────────────────────────────────────
 cargarUnidades();       // unidades personalizadas
