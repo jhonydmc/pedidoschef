@@ -1778,63 +1778,71 @@ async function procesarAlbaran(input){
   if(!file) return;
 
   // Mostrar preview
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('albaran-img').src = e.target.result;
-    document.getElementById('albaran-preview').style.display='block';
-  };
-  reader.readAsDataURL(file);
-
-  // Mostrar loading
+  const previewUrl = URL.createObjectURL(file);
+  document.getElementById('albaran-img').src = previewUrl;
+  document.getElementById('albaran-preview').style.display='block';
   document.getElementById('albaran-upload-area').style.display='none';
   document.getElementById('albaran-loading').style.display='block';
   document.getElementById('albaran-resultado').style.display='none';
   document.getElementById('btn-confirmar-albaran').style.display='none';
 
   try {
-    // Convertir imagen a base64
+    // Convertir siempre a JPEG y comprimir (máx 1200px, calidad 0.85)
     const base64 = await new Promise((res, rej) => {
-      const r = new FileReader();
-      r.onload = () => res(r.result.split(',')[1]);
-      r.onerror = () => rej(new Error('Error leyendo imagen'));
-      r.readAsDataURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 1200;
+        let w = img.width, h = img.height;
+        if(w > MAX || h > MAX){
+          if(w > h){ h = Math.round(h * MAX/w); w = MAX; }
+          else      { w = Math.round(w * MAX/h); h = MAX; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        res(dataUrl.split(',')[1]);
+      };
+      img.onerror = () => rej(new Error('Error procesando imagen'));
+      img.src = previewUrl;
     });
 
-    // Lista de proveedores conocidos para ayudar a la IA
+    // Lista de proveedores para ayudar a la IA
     const proveedoresConocidos = PROVEEDORES.map(p => p.nombre).join(', ');
 
-    // Llamar a Claude con visión
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
+        max_tokens: 1500,
         messages: [{
           role: 'user',
           content: [
             {
               type: 'image',
-              source: { type: 'base64', media_type: file.type, data: base64 }
+              source: { type: 'base64', media_type: 'image/jpeg', data: base64 }
             },
             {
               type: 'text',
-              text: `Eres un asistente para un restaurante. Analiza este albarán de entrega y extrae la información.
+              text: `Eres un asistente para un restaurante. Analiza este albarán de entrega.
 
-Proveedores conocidos del restaurante: ${proveedoresConocidos}
+Proveedores conocidos: ${proveedoresConocidos}
 
-Responde SOLO con un JSON válido, sin texto adicional, con esta estructura exacta:
+Extrae TODA la información visible aunque la imagen no sea perfecta. Si no puedes leer algo con certeza, pon null.
+
+Responde SOLO con JSON válido, sin texto adicional:
 {
-  "proveedor": "nombre del proveedor tal como aparece en la lista de proveedores conocidos, o el nombre que aparece en el albarán si no coincide",
-  "proveedor_id": "id del proveedor si coincide con uno de la lista (food, frutaseloy, serpeska, leikan, prodesco, cominport, tokyoya, jenquimica, kemikal, beeonfood, beran, trueworldfoods), o null si no coincide",
-  "fecha": "fecha del albarán en formato DD/MM/YYYY o null",
+  "proveedor": "nombre del proveedor",
+  "proveedor_id": "uno de: food, frutaseloy, serpeska, leikan, prodesco, cominport, tokyoya, jenquimica, kemikal, beeonfood, beran, trueworldfoods — o null",
+  "fecha": "DD/MM/YYYY o null",
   "productos": [
     {
-      "nombre": "nombre del producto",
+      "nombre": "nombre completo del producto",
       "cantidad": número,
       "unidad": "kg, ud, bote, bolsa, etc",
-      "precio_unitario": número o null,
-      "es_nuevo": true o false (true si no parece estar en la lista habitual)
+      "precio_unitario": número o null
     }
   ]
 }`
@@ -1856,7 +1864,7 @@ Responde SOLO con un JSON válido, sin texto adicional, con esta estructura exac
     document.getElementById('albaran-loading').style.display='none';
     document.getElementById('albaran-resultado').style.display='block';
     document.getElementById('albaran-resultado').innerHTML =
-      '<div style="color:var(--r);font-size:.78rem;padding:12px">⚠ No se pudo leer el albarán. Comprueba que la imagen sea clara y vuelve a intentarlo.</div>';
+      '<div style="color:var(--r);font-size:.78rem;padding:12px 0">⚠ No se pudo leer el albarán. Asegúrate de que la imagen esté bien iluminada y vuelve a intentarlo.</div>';
   }
 }
 
@@ -1869,34 +1877,89 @@ function mostrarResultadoAlbaran(datos){
 
   // Proveedor detectado
   const provColor = datos.proveedor_id ? 'var(--a2)' : 'var(--r)';
-  html += `<div style="background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:12px">
+  html += `<div style="background:var(--bg);border-radius:10px;padding:10px 12px;margin-bottom:12px">
     <div style="font-size:.65rem;color:var(--d)">Proveedor detectado</div>
     <div style="font-size:.88rem;font-weight:500;color:${provColor}">${datos.proveedor || 'No detectado'}</div>
     ${datos.fecha ? `<div style="font-size:.65rem;color:var(--d);margin-top:2px">Fecha: ${datos.fecha}</div>` : ''}
     ${!datos.proveedor_id ? '<div style="font-size:.65rem;color:var(--r);margin-top:2px">⚠ No coincide con ningún proveedor registrado</div>' : ''}
   </div>`;
 
-  // Productos detectados
+  // Resumen de variaciones de precio
+  let subidas=0, bajadas=0;
+
   if(datos.productos && datos.productos.length){
-    html += `<div style="font-size:.7rem;color:var(--d);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">Productos detectados (${datos.productos.length})</div>`;
+    html += `<div style="font-size:.7rem;color:var(--d);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">Productos (${datos.productos.length})</div>`;
+
     datos.productos.forEach((p, i) => {
-      const esNuevo = p.es_nuevo;
+      // Buscar precio actual del producto
+      let precioActual = null;
+      let esNuevo = true;
+      if(datos.proveedor_id){
+        const prov = PROVEEDORES.find(pr=>pr.id===datos.proveedor_id);
+        if(prov){
+          const nombreLower = p.nombre.toLowerCase();
+          const existente = prov.productos.find(prod =>
+            prod.n.toLowerCase().includes(nombreLower.substring(0,8)) ||
+            nombreLower.includes(prod.n.toLowerCase().substring(0,8))
+          );
+          if(existente && existente.p > 0){
+            precioActual = existente.p;
+            esNuevo = false;
+          } else if(existente){
+            esNuevo = false;
+          }
+        }
+      }
+
+      // Calcular variación de precio
+      let precioHtml = '';
+      if(p.precio_unitario && precioActual){
+        const diff = p.precio_unitario - precioActual;
+        const pct = ((diff / precioActual) * 100).toFixed(1);
+        if(Math.abs(diff) > 0.01){
+          if(diff > 0){
+            subidas++;
+            precioHtml = `<div style="font-size:.7rem;color:#c0392b;font-weight:600;margin-top:3px">
+              📈 ${precioActual.toFixed(2)}€ → ${p.precio_unitario.toFixed(2)}€ <span style="background:#fde8e8;padding:1px 5px;border-radius:4px">+${pct}%</span>
+            </div>`;
+          } else {
+            bajadas++;
+            precioHtml = `<div style="font-size:.7rem;color:#27ae60;font-weight:600;margin-top:3px">
+              📉 ${precioActual.toFixed(2)}€ → ${p.precio_unitario.toFixed(2)}€ <span style="background:#e8f5e9;padding:1px 5px;border-radius:4px">${pct}%</span>
+            </div>`;
+          }
+        } else {
+          precioHtml = `<div style="font-size:.65rem;color:var(--d);margin-top:2px">${p.precio_unitario.toFixed(2)} €/ud · sin cambio</div>`;
+        }
+      } else if(p.precio_unitario){
+        precioHtml = `<div style="font-size:.65rem;color:var(--d);margin-top:2px">${p.precio_unitario.toFixed(2)} €/ud</div>`;
+      }
+
       const badge = esNuevo
         ? '<span style="background:#e8f5e9;color:#27ae60;font-size:.55rem;padding:2px 6px;border-radius:4px;margin-left:6px">NUEVO</span>'
         : '';
-      const precio = p.precio_unitario ? `${p.precio_unitario.toFixed(2)} €` : '—';
-      html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--b);gap:8px">
+
+      html += `<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--b);gap:8px">
         <div style="flex:1">
           <div style="font-size:.8rem;color:var(--t)">${p.nombre}${badge}</div>
-          <div style="font-size:.62rem;color:var(--d);margin-top:2px">${p.cantidad} ${p.unidad} · ${precio}/ud</div>
+          <div style="font-size:.62rem;color:var(--d);margin-top:2px">${p.cantidad} ${p.unidad}</div>
+          ${precioHtml}
         </div>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-          <input type="checkbox" id="albaran-check-${i}" checked style="width:16px;height:16px;cursor:pointer">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding-top:2px">
+          <input type="checkbox" id="albaran-check-${i}" checked style="width:18px;height:18px;cursor:pointer;accent-color:var(--t)">
         </label>
       </div>`;
     });
+
+    // Resumen de variaciones
+    if(subidas > 0 || bajadas > 0){
+      html += `<div style="background:var(--bg);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:.72rem">`;
+      if(subidas > 0) html += `<div style="color:#c0392b">📈 ${subidas} producto${subidas>1?'s':''} han subido de precio</div>`;
+      if(bajadas > 0) html += `<div style="color:#27ae60;margin-top:4px">📉 ${bajadas} producto${bajadas>1?'s':''} han bajado de precio</div>`;
+      html += `</div>`;
+    }
   } else {
-    html += '<div style="color:var(--d);font-size:.78rem;padding:8px 0">No se detectaron productos en el albarán.</div>';
+    html += '<div style="color:var(--d);font-size:.78rem;padding:8px 0">No se detectaron productos. Intenta con mejor iluminación.</div>';
   }
 
   cont.innerHTML = html;
