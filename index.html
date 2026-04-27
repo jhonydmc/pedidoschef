@@ -362,9 +362,10 @@ main{padding:14px;max-width:960px;margin:0 auto}
     <div class="mtt">📷 Escanear albarán</div>
     <div class="msb">Haz una foto al albarán. La IA detectará el proveedor, productos y precios automáticamente.</div>
 
-    <div id="albaran-upload-area" style="border:2px dashed var(--b2);border-radius:12px;padding:24px;text-align:center;cursor:pointer;margin-bottom:12px" onclick="document.getElementById('albaran-input').click()">
-      <div style="font-size:2rem;margin-bottom:8px">📄</div>
-      <div style="font-size:.78rem;color:var(--d)">Pulsa para hacer foto o seleccionar imagen</div>
+    <div id="albaran-upload-area" style="border:2px dashed var(--b2);border-radius:12px;padding:32px 24px;text-align:center;cursor:pointer;margin-bottom:12px" onclick="document.getElementById('albaran-input').click()">
+      <div style="font-size:2.5rem;margin-bottom:10px">📷</div>
+      <div style="font-size:.82rem;color:var(--t);font-weight:500;margin-bottom:4px">Tomar foto del albarán</div>
+      <div style="font-size:.68rem;color:var(--d)">Asegúrate de que el texto sea legible y esté bien iluminado</div>
       <input type="file" id="albaran-input" accept="image/*" capture="environment" style="display:none" onchange="procesarAlbaran(this)">
     </div>
 
@@ -1813,7 +1814,10 @@ async function procesarAlbaran(input){
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-dangerous-direct-browser-calls': 'true'
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1500,
@@ -1826,23 +1830,23 @@ async function procesarAlbaran(input){
             },
             {
               type: 'text',
-              text: `Eres un asistente para un restaurante. Analiza este albarán de entrega.
+              text: `Eres un asistente para un restaurante. Analiza este documento o nota y extrae información de productos.
 
 Proveedores conocidos: ${proveedoresConocidos}
 
-Extrae TODA la información visible aunque la imagen no sea perfecta. Si no puedes leer algo con certeza, pon null.
+Extrae TODA la información visible. Aunque sea una nota manuscrita, un ticket o un albarán informal. Si no puedes leer algo, pon null. Si no hay proveedor claro, pon null en proveedor_id.
 
-Responde SOLO con JSON válido, sin texto adicional:
+Responde SOLO con JSON válido, sin texto adicional, sin comentarios:
 {
-  "proveedor": "nombre del proveedor",
+  "proveedor": "nombre del proveedor o null",
   "proveedor_id": "uno de: food, frutaseloy, serpeska, leikan, prodesco, cominport, tokyoya, jenquimica, kemikal, beeonfood, beran, trueworldfoods — o null",
   "fecha": "DD/MM/YYYY o null",
   "productos": [
     {
       "nombre": "nombre completo del producto",
-      "cantidad": número,
+      "cantidad": 1,
       "unidad": "kg, ud, bote, bolsa, etc",
-      "precio_unitario": número o null
+      "precio_unitario": numero_decimal o null
     }
   ]
 }`
@@ -1851,6 +1855,12 @@ Responde SOLO con JSON válido, sin texto adicional:
         }]
       })
     });
+
+    if(!response.ok){
+      const errText = await response.text();
+      console.error('API error:', response.status, errText);
+      throw new Error(`API ${response.status}: ${errText}`);
+    }
 
     const data = await response.json();
     const texto = data.content?.[0]?.text || '';
@@ -1864,7 +1874,10 @@ Responde SOLO con JSON válido, sin texto adicional:
     document.getElementById('albaran-loading').style.display='none';
     document.getElementById('albaran-resultado').style.display='block';
     document.getElementById('albaran-resultado').innerHTML =
-      '<div style="color:var(--r);font-size:.78rem;padding:12px 0">⚠ No se pudo leer el albarán. Asegúrate de que la imagen esté bien iluminada y vuelve a intentarlo.</div>';
+      `<div style="color:var(--r);font-size:.78rem;padding:12px 0">
+        ⚠ Error al procesar: ${err.message || 'Error desconocido'}<br>
+        <span style="font-size:.65rem;color:var(--d)">Comprueba tu conexión e inténtalo de nuevo.</span>
+      </div>`;
   }
 }
 
@@ -1897,11 +1910,13 @@ function mostrarResultadoAlbaran(datos){
       if(datos.proveedor_id){
         const prov = PROVEEDORES.find(pr=>pr.id===datos.proveedor_id);
         if(prov){
-          const nombreLower = p.nombre.toLowerCase();
-          const existente = prov.productos.find(prod =>
-            prod.n.toLowerCase().includes(nombreLower.substring(0,8)) ||
-            nombreLower.includes(prod.n.toLowerCase().substring(0,8))
-          );
+          const nombreLower = p.nombre.toLowerCase().trim();
+          const existente = prov.productos.find(prod => {
+            const prodLower = prod.n.toLowerCase().trim();
+            const minLen = Math.min(6, nombreLower.length, prodLower.length);
+            return prodLower.includes(nombreLower.substring(0, minLen)) ||
+                   nombreLower.includes(prodLower.substring(0, minLen));
+          });
           if(existente && existente.p > 0){
             precioActual = existente.p;
             esNuevo = false;
@@ -1981,15 +1996,18 @@ function confirmarAlbaran(){
     const checkbox = document.getElementById(`albaran-check-${i}`);
     if(!checkbox || !checkbox.checked) return;
 
-    // Buscar si el producto ya existe (por nombre similar)
-    const nombreLower = p.nombre.toLowerCase();
-    const existente = prov.productos.find(prod =>
-      prod.n.toLowerCase().includes(nombreLower.substring(0,10)) ||
-      nombreLower.includes(prod.n.toLowerCase().substring(0,10))
-    );
+    // Buscar producto existente con coincidencia más robusta
+    const nombreLower = p.nombre.toLowerCase().trim();
+    const existente = prov.productos.find(prod => {
+      const prodLower = prod.n.toLowerCase().trim();
+      // Coincidencia exacta o parcial significativa (mínimo 6 chars)
+      const minLen = Math.min(6, nombreLower.length, prodLower.length);
+      return prodLower.includes(nombreLower.substring(0, minLen)) ||
+             nombreLower.includes(prodLower.substring(0, minLen));
+    });
 
     if(existente){
-      // Actualizar precio si se detectó
+      // Actualizar precio siempre que se detecte uno válido
       if(p.precio_unitario && p.precio_unitario > 0){
         existente.p = p.precio_unitario;
         existente.nota = ['kg','l'].includes(existente.u) ? '/'+existente.u : '';
@@ -2010,21 +2028,34 @@ function confirmarAlbaran(){
     }
   });
 
+  // Guardar todo — tanto productos custom como precios actualizados
   saveProductosCustom();
   saveUnidades();
+  // Guardar precios actualizados en localStorage para que persistan
+  const preciosGuardados = JSON.parse(localStorage.getItem('precios_custom')||'{}');
+  prov.productos.forEach(p => { preciosGuardados[p.id] = p.p; });
+  localStorage.setItem('precios_custom', JSON.stringify(preciosGuardados));
+
   renderProds(prov);
   actualizarContador(prov.id);
   cerrarAlbaran();
 
   const msg = [];
-  if(añadidos) msg.push(`${añadidos} producto${añadidos>1?'s':''} añadido${añadidos>1?'s':''}`);
+  if(añadidos)    msg.push(`${añadidos} producto${añadidos>1?'s':''} añadido${añadidos>1?'s':''}`);
   if(actualizados) msg.push(`${actualizados} precio${actualizados>1?'s':''} actualizado${actualizados>1?'s':''}`);
-  showT('✓ '+msg.join(' · '));
+  showT('✓ ' + (msg.length ? msg.join(' · ') : 'Sin cambios'));
 }
 
 // ── 16. ARRANQUE ─────────────────────────────────────────────────────────────
-cargarUnidades();       // unidades personalizadas
-cargarProductosCustom(); // productos añadidos manualmente
+cargarUnidades();
+cargarProductosCustom();
+// Cargar precios actualizados por albaranes
+(function(){
+  const precios = JSON.parse(localStorage.getItem('precios_custom')||'{}');
+  PROVEEDORES.forEach(prov=>prov.productos.forEach(p=>{
+    if(precios[p.id] !== undefined) p.p = precios[p.id];
+  }));
+})();
 render();upd();
 
 // Botón cerrar proveedor
