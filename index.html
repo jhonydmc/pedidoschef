@@ -271,7 +271,13 @@ main{padding:14px;max-width:960px;margin:0 auto}
     <div class="mtt">Pedidos listos para enviar</div>
     <div class="msb">Los precios NO aparecerán en los mensajes.</div>
     <div id="prov-send-list"></div>
-    <label class="mlb">Notas para todos los proveedores (opcional)</label>
+
+    <label class="mlb">Fecha de entrega</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px" id="fecha-btns"></div>
+    <input class="mi" type="date" id="fecha-manual" style="margin-top:6px" onchange="seleccionarFechaManual(this.value)">
+    <div style="font-size:.65rem;color:var(--d);margin-top:4px" id="fecha-label"></div>
+
+    <label class="mlb" style="margin-top:12px">Notas (opcional)</label>
     <textarea class="mi" id="notas" rows="2" placeholder="Ej: llamar antes de llegar..."></textarea>
     <div class="acts" style="margin-top:16px;margin-bottom:0">
       <button class="btn bs" onclick="closeM()">Cancelar</button>
@@ -383,6 +389,33 @@ main{padding:14px;max-width:960px;margin:0 auto}
     <div class="acts" style="margin-top:12px;margin-bottom:0">
       <button class="btn bs" onclick="cerrarAlbaran()">Cancelar</button>
       <button class="btn bp" id="btn-confirmar-albaran" style="display:none" onclick="confirmarAlbaran()">Añadir productos ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: AÑADIR STOCK MANUAL -->
+<div class="mo" id="mo-stock-manual">
+  <div class="mdl">
+    <div class="mtt">➕ Añadir al stock</div>
+    <div class="msb">Añade cualquier producto al inventario manualmente.</div>
+    <label class="mlb">Nombre del producto *</label>
+    <input class="mi" id="sm-nombre" type="text" placeholder="Ej: Sopa miso cocido" autocomplete="off">
+    <label class="mlb">Proveedor / Origen</label>
+    <input class="mi" id="sm-proveedor" type="text" placeholder="Ej: Producción propia">
+    <label class="mlb">Cantidad *</label>
+    <input class="mi" id="sm-cantidad" type="number" step="0.1" min="0" placeholder="0" inputmode="decimal">
+    <label class="mlb">Unidad *</label>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px" id="sm-unidades">
+      <button class="unidad-btn sel" onclick="selUnidadSM(this,'kg')">kg</button>
+      <button class="unidad-btn" onclick="selUnidadSM(this,'ud')">ud</button>
+      <button class="unidad-btn" onclick="selUnidadSM(this,'l')">l</button>
+      <button class="unidad-btn" onclick="selUnidadSM(this,'bote')">bote</button>
+    </div>
+    <input class="mi" id="sm-unidad-custom" type="text" placeholder="Otra unidad..." style="margin-top:4px">
+    <div id="sm-error" style="color:var(--r);font-size:.68rem;margin-top:6px;display:none">Rellena nombre y cantidad.</div>
+    <div class="acts" style="margin-top:16px;margin-bottom:0">
+      <button class="btn bs" onclick="cerrarAnadirStock()">Cancelar</button>
+      <button class="btn bp" onclick="guardarStockManualLibre()">Añadir</button>
     </div>
   </div>
 </div>
@@ -940,7 +973,7 @@ function render(){
 
 function buildAcc(prov){
   const cnt=prov.productos.filter(p=>(Q[p.id]||0)>0).length;
-  const div=document.createElement('div');div.className='acc';
+  const div=document.createElement('div'); div.className='acc';
   div.innerHTML=`
     <div class="acc-header" id="ah-${prov.id}" onclick="toggleAcc('${prov.id}')">
       <div class="acc-left">
@@ -952,8 +985,11 @@ function buildAcc(prov){
         <div class="acc-arrow">▼</div>
       </div>
     </div>
-    <div class="acc-body" id="ab-${prov.id}"><div class="pl" id="pl-${prov.id}"></div><button class="add-prod-btn" onclick="abrirNuevo('${prov.id}')">+ Añadir producto a ${prov.nombre}</button></div>`;
-  setTimeout(()=>renderProds(prov),0);
+    <div class="acc-body" id="ab-${prov.id}">
+      <div class="pl" id="pl-${prov.id}"></div>
+      <button class="add-prod-btn" onclick="abrirNuevo('${prov.id}')">+ Añadir producto a ${prov.nombre}</button>
+    </div>`;
+  // NO renderizar productos hasta que se abra — lazy loading
   return div;
 }
 
@@ -1063,6 +1099,9 @@ function toggleAcc(id){
     document.getElementById('ah-'+id).classList.add('open');
     document.getElementById('ab-'+id).classList.add('open');
     const prov=PROVEEDORES.find(p=>p.id===id);
+    // Renderizar productos solo si no están ya cargados
+    const pl=document.getElementById('pl-'+id);
+    if(pl && pl.children.length===0) renderProds(prov);
     document.getElementById('float-bar-name').textContent=prov.nombre;
     document.getElementById('float-bar').classList.add('on');
     setTimeout(()=>{
@@ -1340,6 +1379,54 @@ function restaurarTodos(){
 
 
 // ── 12. ENVÍO DE PEDIDOS ─────────────────────────────────────────────────────
+let fechaEntregaSeleccionada = null;
+
+function iniciarFechaSelector(){
+  const hoy = new Date();
+  const dias  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const btns  = document.getElementById('fecha-btns');
+  btns.innerHTML = '';
+
+  // Próximos 5 días que el restaurante abre
+  let count=0, i=1;
+  const opciones=[];
+  while(count<5){ const d=new Date(hoy); d.setDate(hoy.getDate()+i); if(DIAS_ABRE.includes(d.getDay())){opciones.push(new Date(d));count++;} i++; }
+
+  // Fecha por defecto = cálculo automático
+  const defecto = calcEntregaProv({});
+  fechaEntregaSeleccionada = defecto;
+
+  opciones.forEach(d=>{
+    const btn=document.createElement('button');
+    const esDefecto=d.toDateString()===defecto.toDateString();
+    btn.className='unidad-btn'+(esDefecto?' sel':'');
+    btn.textContent=`${dias[d.getDay()]} ${d.getDate()} ${meses[d.getMonth()]}`;
+    btn.onclick=()=>{
+      btns.querySelectorAll('.unidad-btn').forEach(b=>b.classList.remove('sel'));
+      btn.classList.add('sel');
+      fechaEntregaSeleccionada=d;
+      document.getElementById('fecha-manual').value='';
+      actualizarLabelFecha(d);
+    };
+    if(esDefecto) actualizarLabelFecha(d);
+    btns.appendChild(btn);
+  });
+
+  const min=new Date(hoy); min.setDate(hoy.getDate()+1);
+  document.getElementById('fecha-manual').min=min.toISOString().split('T')[0];
+  document.getElementById('fecha-manual').value='';
+}
+function seleccionarFechaManual(val){
+  if(!val) return;
+  fechaEntregaSeleccionada=new Date(val+'T12:00:00');
+  document.getElementById('fecha-btns').querySelectorAll('.unidad-btn').forEach(b=>b.classList.remove('sel'));
+  actualizarLabelFecha(fechaEntregaSeleccionada);
+}
+function actualizarLabelFecha(d){
+  document.getElementById('fecha-label').textContent='📅 Entrega: '+fmtL(d);
+}
+
 function openM(){
   const activos=PROVEEDORES.filter(prov=>prov.productos.some(p=>(Q[p.id]||0)>0));
   if(!activos.length){showT('Añade al menos un producto');return;}
@@ -1347,6 +1434,7 @@ function openM(){
   colaIdx=0;
   document.getElementById('notas').value='';
   renderSendList();
+  iniciarFechaSelector();
   document.getElementById('mo').classList.add('on');
   document.body.style.overflow='hidden';
   document.getElementById('float-bar').style.display='none';
@@ -1398,34 +1486,32 @@ function renderSendList(){
 
 async function enviarSiguiente(){
   if(colaIdx>=colaEnvio.length)return;
-  const prov=colaEnvio[colaIdx];
-  const its=prov.productos.filter(p=>(Q[p.id]||0)>0);
-  const notas=document.getElementById('notas').value;
-  const fechaEntrega = calcEntregaProv(prov);
+  const prov   = colaEnvio[colaIdx];
+  const its    = prov.productos.filter(p=>(Q[p.id]||0)>0);
+  const notas  = document.getElementById('notas').value;
+  // Usar fecha seleccionada manualmente o calcular por proveedor
+  const fecha  = fechaEntregaSeleccionada || calcEntregaProv(prov);
 
-  // Actualizar UI inmediatamente
   colaEnvio[colaIdx].enviado=true;
   colaIdx++;
   while(colaIdx<colaEnvio.length&&colaEnvio[colaIdx].enviado)colaIdx++;
   renderSendList();
 
-  // Abrir WhatsApp/email sin delay
   if(prov.email){
-    const asunto = `Pedido MYO Handroll Bar · Entrega ${fmtS(fechaEntrega)}`;
-    let cuerpo = `MYO Handroll Bar\nPedido ${prov.nombre} · Entrega ${fmtS(fechaEntrega)}\n\n`;
+    const asunto=`Pedido MYO Handroll Bar · Entrega ${fmtS(fecha)}`;
+    let cuerpo=`MYO Handroll Bar\nPedido ${prov.nombre} · Entrega ${fmtS(fecha)}\n\n`;
     its.forEach(p=>{const u=p.u.trim().toLowerCase();cuerpo+=`${p.n} (${p.u}) · ${Q[p.id]} ${u==='kg'?'kg':u==='l'?'l':'ud'}\n`;});
     cuerpo+=`\nEntrega después de las 10:30h`;
     if(notas)cuerpo+=`\n${notas}`;
     window.open(`mailto:${prov.email}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`,'_blank');
   } else {
-    let m=`_Myo Handroll Bar_\n_Pedido ${prov.nombre} · Entrega ${fmtS(fechaEntrega)}_\n\n`;
+    let m=`_Myo Handroll Bar_\n_Pedido ${prov.nombre} · Entrega ${fmtS(fecha)}_\n\n`;
     its.forEach(p=>{const u=p.u.trim().toLowerCase();m+=`_*${p.n.toLowerCase()} (${p.u}) · ${Q[p.id]} ${u==='kg'?'kg':u==='l'?'l':'ud'}*_\n`;});
     m+=`\n_Entrega después de las 10:30h_`;
     if(notas)m+=`\n_${notas}_`;
     window.open(`https://wa.me/${prov.wa}?text=${encodeURIComponent(m)}`,'_blank');
   }
 
-  // Guardar en BD en segundo plano con feedback al usuario si falla
   guardarPedidoEnBD(prov, its).catch(err=>{
     console.error('Error guardando pedido:', err);
     showT('⚠ Pedido enviado pero no se guardó en stock. Comprueba tu conexión.');
@@ -1530,38 +1616,144 @@ function cerrarStock(){
 
 // Productos prioritarios de stock
 
+// ── STOCK MANUAL LIBRE ───────────────────────────────────────────────────────
+let smUnidadSel = 'kg';
+function abrirAnadirStock(){
+  document.getElementById('sm-nombre').value='';
+  document.getElementById('sm-proveedor').value='';
+  document.getElementById('sm-cantidad').value='';
+  document.getElementById('sm-unidad-custom').value='';
+  document.getElementById('sm-error').style.display='none';
+  smUnidadSel='kg';
+  document.getElementById('sm-unidades').querySelectorAll('.unidad-btn').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('sm-unidades').querySelector('.unidad-btn').classList.add('sel');
+  document.getElementById('mo-stock-manual').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function cerrarAnadirStock(){
+  document.getElementById('mo-stock-manual').classList.remove('on');
+  document.body.style.overflow='';
+}
+function selUnidadSM(btn, u){
+  document.getElementById('sm-unidades').querySelectorAll('.unidad-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  smUnidadSel=u;
+  document.getElementById('sm-unidad-custom').value='';
+}
+async function guardarStockManualLibre(){
+  const nombre   = document.getElementById('sm-nombre').value.trim();
+  const proveedor= document.getElementById('sm-proveedor').value.trim() || 'Manual';
+  const cantidad = parseFloat(document.getElementById('sm-cantidad').value)||0;
+  const custom   = document.getElementById('sm-unidad-custom').value.trim();
+  const unidad   = custom || smUnidadSel;
+  if(!nombre || cantidad<=0){ document.getElementById('sm-error').style.display='block'; return; }
+  document.getElementById('sm-error').style.display='none';
+
+  if(!currentUser){ showT('⚠ Inicia sesión primero'); return; }
+  const semana = getLunes();
+  const prodId = 'MANUAL_'+Date.now().toString().slice(-6);
+  const {data, error} = await supa.from('stock').insert({
+    user_id: currentUser.id,
+    semana, producto_id: prodId,
+    producto_nombre: nombre,
+    unidad, cantidad_pedida: cantidad,
+    cantidad_restante: cantidad,
+    proveedor_nombre: proveedor
+  }).select().single();
+  if(error){ showT('⚠ Error al guardar'); console.error(error); return; }
+  stockData[prodId]=data;
+  cerrarAnadirStock();
+  renderStock();
+  showT('✓ Añadido al stock: '+nombre);
+}
+
 // ── 14. STOCK ────────────────────────────────────────────────────────────────
-const STOCK_PRIORITARIOS = [
-  'ventresca','vieira','lubina','hamashi','salmon','salmón','maguro',
-  'dashi','torpedo','mochi','yakinori','wagyu','cadera','lomo atun','lomo atún','atun rojo','atún rojo'
-];
+// Productos inventario con su unidad de inventario (independiente del pedido)
+const PRODUCTOS_INVENTARIO = {
+  // +FOOD — kg
+  'FOOD_004': 'kg', // LOMO ATUN FRESCO VIVERO
+  'FOOD_005': 'kg', // LUBINA 2/3
+  'FOOD_001': 'kg', // CARNE DE VIERA SIN CORAL
+  'FOOD_009': 'kg', // VENTRESCA ATUN ROJO
+  // SERPESKA — kg
+  'SERP_008': 'kg', // HAMACHI 2,2KG
+  'SERP_011': 'kg', // SALMON 2,2 LOMOS
+  // TOKYO YA — ud
+  'TOKY_026': 'ud', // YAKINORI PREMIUM 50HJ
+  // COMINPORT — ud
+  'COMI_008': 'ud', // EBI FRY LANGOSTINO TORPEDO 40pzs
+  'COMI_023': 'ud', // MOCHI CHOCOLATE
+  'COMI_024': 'ud', // MOCHI CHOCOLATE BLANCO
+  'COMI_025': 'ud', // MOCHI CHOCOLATE CAJITA
+  'COMI_026': 'ud', // MOCHI HELADO FRAMBUESA
+  'COMI_027': 'ud', // MOCHI HELADO VAINILLA
+  // LEIKAN — kg
+  'LEIK_003': 'kg', // CADERA VACA
+  // BEEF ON FOOD — kg
+  'BEEF_003': 'kg', // VACIO DE WAGYU FLANK STEAK
+};
+
+// Producto manual de producción propia (sopa miso cocido)
+const PRODUCTO_SOPA_MISO = {
+  producto_id: 'INTERNO_001',
+  producto_nombre: 'SOPA MISO COCIDO',
+  unidad: 'kg',
+  proveedor_nombre: 'Producción propia',
+};
+
 function esPrioritario(nombre, prodId){
   if(prioritariosExtra.includes(prodId)) return true;
-  const n = nombre.toLowerCase();
-  return STOCK_PRIORITARIOS.some(p => n.includes(p));
+  return prodId in PRODUCTOS_INVENTARIO || prodId === 'INTERNO_001';
 }
 
 function renderStock(){
   const cont = document.getElementById('stock-content');
 
-  // Construir lista completa de productos prioritarios de todos los proveedores
+  // Construir lista completa de productos del inventario
   const todosPrioritarios = [];
   PROVEEDORES.forEach(prov=>{
     prov.productos.forEach(p=>{
-      if(esPrioritario(p.n, p.id)){
+      if(p.id in PRODUCTOS_INVENTARIO){
         const enStock = stockData[p.id];
+        const unidadInv = PRODUCTOS_INVENTARIO[p.id]; // unidad de inventario
         todosPrioritarios.push({
-          producto_id:   p.id,
-          producto_nombre: p.n,
-          unidad:        p.u,
+          producto_id:      p.id,
+          producto_nombre:  p.n,
+          unidad:           unidadInv,
           proveedor_nombre: prov.nombre,
           cantidad_pedida:   enStock ? enStock.cantidad_pedida   : 0,
           cantidad_restante: enStock ? enStock.cantidad_restante : 0,
-          id:            enStock ? enStock.id : null,
-          sinPedir:      !enStock
+          id:               enStock ? enStock.id : null,
+          sinPedir:         !enStock
         });
       }
     });
+  });
+
+  // Añadir sopa miso (producción propia)
+  const enStockMiso = stockData['INTERNO_001'];
+  todosPrioritarios.push({
+    ...PRODUCTO_SOPA_MISO,
+    cantidad_pedida:   enStockMiso ? enStockMiso.cantidad_pedida   : 0,
+    cantidad_restante: enStockMiso ? enStockMiso.cantidad_restante : 0,
+    id:               enStockMiso ? enStockMiso.id : null,
+    sinPedir:         !enStockMiso
+  });
+
+  // Añadir productos marcados manualmente con ★ que no estén ya en la lista
+  Object.values(stockData).forEach(item=>{
+    if(prioritariosExtra.includes(item.producto_id) && !(item.producto_id in PRODUCTOS_INVENTARIO)){
+      todosPrioritarios.push({
+        producto_id:      item.producto_id,
+        producto_nombre:  item.producto_nombre,
+        unidad:           item.unidad,
+        proveedor_nombre: item.proveedor_nombre,
+        cantidad_pedida:   item.cantidad_pedida,
+        cantidad_restante: item.cantidad_restante,
+        id:               item.id,
+        sinPedir:         false
+      });
+    }
   });
 
   // Agrupar por proveedor
@@ -1620,6 +1812,7 @@ function renderStock(){
     });
   }
 
+  html+=`<button class="stock-reset-btn" style="margin-top:8px;border-color:#27ae60;color:#27ae60" onclick="abrirAnadirStock()">➕ Añadir al stock manualmente</button>`;
   html+=`<button class="stock-reset-btn" onclick="resetStock()">Resetear stock semanal</button>`;
   html+=`<button class="stock-reset-btn" style="margin-top:8px;border-color:#b8860b;color:#b8860b" onclick="exportarStockPDF()">📄 Exportar PDF</button>`;
   cont.innerHTML = html;
