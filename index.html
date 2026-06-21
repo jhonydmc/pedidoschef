@@ -834,6 +834,10 @@ let colaEnvio=[];let colaIdx=0;
 const UNIDADES_PRESET=['kg','l','ud','bote','bolsa','bandeja','pack','caja','garrafa','rollo','lata','bidon'];
 let nuevoProvId=null;let unidadSel=null;
 
+// ── CONTACTOS PARA COPIAS ─────────────────────────────────────────────────────
+const COPIA_EMAIL   = 'a.olmo.aparici@gmail.com'; // copia de pedidos e inventario
+const MARKEL_WA     = '34687537302';               // WhatsApp inventario solo
+
 // ── 3. SUPABASE ──────────────────────────────────────────────────────────────
 const SUPA_URL = 'https://xgxziltsbvhywhmlhxna.supabase.co';
 const SUPA_KEY = 'sb_publishable_YAiPhp5ZXcGop3pTY5zXtA_X-_c2w6W';
@@ -1516,6 +1520,16 @@ async function enviarSiguiente(){
     console.error('Error guardando pedido:', err);
     showT('⚠ Pedido enviado pero no se guardó en stock. Comprueba tu conexión.');
   });
+
+  // Enviar copia por email
+  const asuntoCopia = `[COPIA] Pedido ${prov.nombre} · Entrega ${fmtS(fecha)}`;
+  let cuerpoCopia = `MYO Handroll Bar — Copia de pedido\nProveedor: ${prov.nombre}\nEntrega: ${fmtS(fecha)}\n\n`;
+  its.forEach(p=>{const u=p.u.trim().toLowerCase();cuerpoCopia+=`${p.n} (${p.u}) · ${Q[p.id]} ${u==='kg'?'kg':u==='l'?'l':'ud'}\n`;});
+  cuerpoCopia+=`\nEntrega después de las 10:30h`;
+  if(notas) cuerpoCopia+=`\n${notas}`;
+  setTimeout(()=>{
+    window.open(`mailto:${COPIA_EMAIL}?subject=${encodeURIComponent(asuntoCopia)}&body=${encodeURIComponent(cuerpoCopia)}`,'_blank');
+  }, 1500); // pequeño delay para no solapar con el WhatsApp/email principal
 }
 
 function closeM(){
@@ -1931,6 +1945,30 @@ function exportarStockPDF(){
   win.document.write(html);
   win.document.close();
   setTimeout(()=>win.print(),500);
+
+  // Construir resumen de texto para email y WhatsApp
+  let resumenTexto = `*INVENTARIO MYO Handroll Bar*\nSemana del ${semana}\n\n`;
+  for(const prov in grupos){
+    resumenTexto += `*${prov}*\n`;
+    grupos[prov].forEach(item=>{
+      const cantidad = item.cantidad_restante === '—' ? '—' : `${item.cantidad_restante} ${item.unidad}`;
+      resumenTexto += `• ${item.producto_nombre}: ${cantidad}\n`;
+    });
+    resumenTexto += '\n';
+  }
+
+  // Email a Olmo
+  const asuntoInv = `Inventario MYO Handroll Bar · Semana ${semana}`;
+  setTimeout(()=>{
+    window.open(`mailto:${COPIA_EMAIL}?subject=${encodeURIComponent(asuntoInv)}&body=${encodeURIComponent(resumenTexto)}`,'_blank');
+  }, 800);
+
+  // WhatsApp a Markel
+  setTimeout(()=>{
+    window.open(`https://wa.me/${MARKEL_WA}?text=${encodeURIComponent(resumenTexto)}`,'_blank');
+  }, 1600);
+
+  showT('📄 PDF generado · Enviando a Olmo y Markel...');
 }
 
 // ── 15. UTILIDADES ───────────────────────────────────────────────────────────
@@ -2005,25 +2043,7 @@ async function procesarAlbaran(input){
     // Lista de proveedores para ayudar a la IA
     const proveedoresConocidos = PROVEEDORES.map(p => p.nombre).join(', ');
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'anthropic-dangerous-direct-browser-calls': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1500,
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: 'image/jpeg', data: base64 }
-            },
-            {
-              type: 'text',
-              text: `Eres un asistente para un restaurante. Analiza este documento o nota y extrae información de productos.
+    const prompt = `Eres un asistente para un restaurante. Analiza este documento o nota y extrae información de productos.
 
 Proveedores conocidos: ${proveedoresConocidos}
 
@@ -2042,21 +2062,25 @@ Responde SOLO con JSON válido, sin texto adicional, sin comentarios:
       "precio_unitario": numero_decimal o null
     }
   ]
-}`
-            }
-          ]
-        }]
-      })
+}`;
+
+    const WORKER_URL = 'https://floral-tooth-ceb4.jhonathanalexanderlopezvidal.workers.dev';
+
+    const response = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image_base64: base64, prompt })
     });
 
     if(!response.ok){
       const errText = await response.text();
-      console.error('API error:', response.status, errText);
-      throw new Error(`API ${response.status}: ${errText}`);
+      console.error('Worker error:', response.status, errText);
+      throw new Error(`Error ${response.status}: ${errText}`);
     }
 
     const data = await response.json();
-    const texto = data.content?.[0]?.text || '';
+    if(data.error) throw new Error(data.error);
+    const texto = data.text || '';
     const clean = texto.replace(/```json|```/g,'').trim();
     albaranDetectado = JSON.parse(clean);
 
