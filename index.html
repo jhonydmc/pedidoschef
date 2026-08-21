@@ -277,8 +277,7 @@ main{padding:14px;max-width:960px;margin:0 auto}
     <input class="mi" type="date" id="fecha-manual" style="margin-top:6px" onchange="seleccionarFechaManual(this.value)">
     <div style="font-size:.65rem;color:var(--d);margin-top:4px" id="fecha-label"></div>
 
-    <label class="mlb" style="margin-top:12px">Notas (opcional)</label>
-    <textarea class="mi" id="notas" rows="2" placeholder="Ej: llamar antes de llegar..."></textarea>
+    <div id="prov-notas-container" style="margin-top:8px"></div>
     <div class="acts" style="margin-top:16px;margin-bottom:0">
       <button class="btn bs" onclick="closeM()">Cancelar</button>
       <button class="btn bp" id="btn-enviar-todos" onclick="enviarSiguiente()">Enviar a todos →</button>
@@ -319,7 +318,10 @@ main{padding:14px;max-width:960px;margin:0 auto}
   <div class="login-sub">Acceso seguro</div>
   <div class="login-form">
     <input class="login-inp" id="login-email" type="email" placeholder="Email" autocomplete="email">
-    <input class="login-inp" id="login-pass" type="password" placeholder="Contraseña" autocomplete="current-password">
+    <div style="position:relative">
+      <input class="login-inp" id="login-pass" type="password" placeholder="Contraseña" autocomplete="current-password" style="padding-right:44px">
+      <button onclick="togglePassVis()" type="button" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--d)" id="btn-pass-vis">👁️</button>
+    </div>
     <div class="login-err" id="login-err"></div>
     <button class="login-btn" onclick="doLogin()">Entrar →</button>
   </div>
@@ -1460,6 +1462,17 @@ function renderSendList(){
       <div class="prov-send-estado ${estado}">${label}</div>`;
     list.appendChild(d);
   });
+
+  // Notas por proveedor
+  const notasCont = document.getElementById('prov-notas-container');
+  notasCont.innerHTML='';
+  colaEnvio.filter(p=>!p.enviado).forEach(prov=>{
+    const wrap = document.createElement('div');
+    wrap.style.cssText='margin-bottom:8px';
+    wrap.innerHTML=`<label style="font-size:.6rem;color:var(--d);letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:4px">Nota para ${prov.nombre} (opcional)</label>
+      <textarea class="mi" id="nota-${prov.id}" rows="1" placeholder="Ej: llamar antes..." style="resize:none;font-size:.75rem"></textarea>`;
+    notasCont.appendChild(wrap);
+  });
   const pendientes=colaEnvio.filter(p=>!p.enviado).length;
   const btn=document.getElementById('btn-enviar-todos');
   if(pendientes===0){
@@ -1469,7 +1482,6 @@ function renderSendList(){
 
     // Preparar resumen WhatsApp
     const fecha = fechaEntregaSeleccionada || new Date();
-    const notas = document.getElementById('notas').value;
     let resumen = `_Myo Handroll Bar — Resumen de pedidos_\n_Entrega: ${fmtS(fecha)}_\n\n`;
     colaEnvio.forEach(prov=>{
       const its = prov.productos.filter(p=>(Q[p.id]||0)>0);
@@ -1485,16 +1497,16 @@ function renderSendList(){
     if(notas) resumen+=`\n_${notas}_`;
     const waUrl = `https://wa.me/${RESUMEN_WA}?text=${encodeURIComponent(resumen)}`;
 
-    // Botón WhatsApp resumen
+    // Botón generar PDF resumen
     if(!document.getElementById('btn-resumen-wa')){
-      const btnWA = document.createElement('button');
-      btnWA.id = 'btn-resumen-wa';
-      btnWA.className = 'btn bp';
-      btnWA.style.marginTop = '10px';
-      btnWA.style.background = '#25D366';
-      btnWA.textContent = '📲 Enviar resumen por WhatsApp';
-      btnWA.onclick = ()=>{ window.open(waUrl,'_blank'); btnWA.textContent='✓ Resumen enviado'; btnWA.disabled=true; btnWA.style.opacity='.5'; };
-      btn.parentElement.appendChild(btnWA);
+      const btnPDF = document.createElement('button');
+      btnPDF.id = 'btn-resumen-wa';
+      btnPDF.className = 'btn bp';
+      btnPDF.style.marginTop = '10px';
+      btnPDF.style.background = '#25D366';
+      btnPDF.textContent = '📄 Ver resumen y enviar';
+      btnPDF.onclick = ()=>{ generarResumenPDF(resumen, fecha); };
+      btn.parentElement.appendChild(btnPDF);
     }
 
     // Botón cerrar
@@ -1517,7 +1529,7 @@ async function enviarSiguiente(){
   if(colaIdx>=colaEnvio.length)return;
   const prov   = colaEnvio[colaIdx];
   const its    = prov.productos.filter(p=>(Q[p.id]||0)>0);
-  const notas  = document.getElementById('notas').value;
+  const notas = document.getElementById('nota-'+prov.id)?.value || '';
   // Usar fecha seleccionada manualmente o calcular por proveedor
   const fecha  = fechaEntregaSeleccionada || calcEntregaProv(prov);
 
@@ -1978,6 +1990,56 @@ function exportarStockPDF(){
   }, 800);
 
   showT('📄 PDF generado · Enviando a Markel...');
+}
+
+function togglePassVis(){
+  const inp = document.getElementById('login-pass');
+  const btn = document.getElementById('btn-pass-vis');
+  if(inp.type==='password'){ inp.type='text'; btn.textContent='🙈'; }
+  else { inp.type='password'; btn.textContent='👁️'; }
+}
+
+function generarResumenPDF(resumenTexto, fecha){
+  const waUrl = `https://wa.me/${RESUMEN_WA}?text=${encodeURIComponent(resumenTexto)}`;
+  // Generar PDF limpio
+  const semana = fmtS(fecha);
+  let html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    body{font-family:Arial,sans-serif;padding:28px;color:#1a1a1a;max-width:580px;margin:0 auto}
+    h1{font-size:1.1rem;margin-bottom:4px}
+    .sub{font-size:.7rem;color:#888;margin-bottom:20px}
+    h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.1em;color:#b8860b;border-bottom:1.5px solid #b8860b;padding-bottom:3px;margin-top:18px;margin-bottom:6px}
+    p{font-size:.82rem;margin:3px 0;padding:4px 0;border-bottom:1px solid #f0f0f0}
+    .footer{margin-top:32px;font-size:.6rem;color:#aaa;text-align:center}
+    .wa-btn{display:block;margin:20px auto;background:#25D366;color:#fff;border:none;padding:12px 24px;border-radius:8px;font-size:.85rem;cursor:pointer;text-align:center}
+  </style></head><body>
+  <h1>📋 Resumen de pedidos — MYO Handroll Bar</h1>
+  <div class="sub">Entrega: ${semana} · ${new Date().toLocaleDateString('es-ES')}</div>`;
+
+  colaEnvio.forEach(prov=>{
+    const its = prov.productos.filter(p=>(Q[p.id]||0)>0);
+    if(!its.length) return;
+    html+=`<h2>${prov.nombre}</h2>`;
+    its.forEach(p=>{
+      const u=p.u.trim().toLowerCase();
+      html+=`<p>${p.n} · <strong>${Q[p.id]} ${u==='kg'?'kg':u==='l'?'l':'ud'}</strong></p>`;
+    });
+  });
+
+  html+=`<div class="footer">PedidosChef · MYO Handroll Bar · García de Paredes 63, Madrid</div>
+  <script>
+    setTimeout(()=>{
+      if(confirm('¿Enviar resumen por WhatsApp?')){
+        window.open('${waUrl}','_blank');
+      }
+    },600);
+  <\/script>
+  </body></html>`;
+
+  const win = window.open('','_blank');
+  win.document.write(html);
+  win.document.close();
+  setTimeout(()=>win.print(), 500);
 }
 
 // ── 15. UTILIDADES ───────────────────────────────────────────────────────────
