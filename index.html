@@ -835,7 +835,7 @@ const UNIDADES_PRESET=['kg','l','ud','bote','bolsa','bandeja','pack','caja','gar
 let nuevoProvId=null;let unidadSel=null;
 
 // ── CONTACTOS PARA COPIAS ─────────────────────────────────────────────────────
-const COPIA_EMAIL   = 'a.olmo.aparici@gmail.com'; // copia de pedidos e inventario
+const RESUMEN_WA = '34624342090'; // WhatsApp resumen pedidos
 const MARKEL_WA     = '34687537302';               // WhatsApp inventario solo
 
 // ── 3. SUPABASE ──────────────────────────────────────────────────────────────
@@ -1466,20 +1466,45 @@ function renderSendList(){
     btn.textContent='✓ Todos enviados';
     btn.disabled=true;btn.style.opacity='.5';
     localStorage.removeItem('pedido_q');
-    // Mostrar botón de cerrar
-    let btnCerrar = document.getElementById('btn-cerrar-envio');
-    if(!btnCerrar){
-      btnCerrar = document.createElement('button');
+
+    // Preparar resumen WhatsApp
+    const fecha = fechaEntregaSeleccionada || new Date();
+    const notas = document.getElementById('notas').value;
+    let resumen = `_Myo Handroll Bar — Resumen de pedidos_\n_Entrega: ${fmtS(fecha)}_\n\n`;
+    colaEnvio.forEach(prov=>{
+      const its = prov.productos.filter(p=>(Q[p.id]||0)>0);
+      if(!its.length) return;
+      resumen += `*── ${prov.nombre} ──*\n`;
+      its.forEach(p=>{
+        const u=p.u.trim().toLowerCase();
+        resumen+=`• ${p.n} · ${Q[p.id]} ${u==='kg'?'kg':u==='l'?'l':'ud'}\n`;
+      });
+      resumen+='\n';
+    });
+    resumen+=`_Entrega después de las 10:30h_`;
+    if(notas) resumen+=`\n_${notas}_`;
+    const waUrl = `https://wa.me/${RESUMEN_WA}?text=${encodeURIComponent(resumen)}`;
+
+    // Botón WhatsApp resumen
+    if(!document.getElementById('btn-resumen-wa')){
+      const btnWA = document.createElement('button');
+      btnWA.id = 'btn-resumen-wa';
+      btnWA.className = 'btn bp';
+      btnWA.style.marginTop = '10px';
+      btnWA.style.background = '#25D366';
+      btnWA.textContent = '📲 Enviar resumen por WhatsApp';
+      btnWA.onclick = ()=>{ window.open(waUrl,'_blank'); btnWA.textContent='✓ Resumen enviado'; btnWA.disabled=true; btnWA.style.opacity='.5'; };
+      btn.parentElement.appendChild(btnWA);
+    }
+
+    // Botón cerrar
+    if(!document.getElementById('btn-cerrar-envio')){
+      const btnCerrar = document.createElement('button');
       btnCerrar.id = 'btn-cerrar-envio';
-      btnCerrar.className = 'btn bp';
-      btnCerrar.style.marginTop = '10px';
+      btnCerrar.className = 'btn bs';
+      btnCerrar.style.marginTop = '8px';
       btnCerrar.textContent = 'Cerrar ✕';
-      btnCerrar.onclick = ()=>{
-        closeM();
-        // Resetear cantidades en pantalla
-        Object.keys(Q).forEach(k=>{Q[k]=0;});
-        render();upd();
-      };
+      btnCerrar.onclick = ()=>{ closeM(); Object.keys(Q).forEach(k=>{Q[k]=0;}); render();upd(); };
       btn.parentElement.appendChild(btnCerrar);
     }
   } else {
@@ -1520,16 +1545,6 @@ async function enviarSiguiente(){
     console.error('Error guardando pedido:', err);
     showT('⚠ Pedido enviado pero no se guardó en stock. Comprueba tu conexión.');
   });
-
-  // Enviar copia por email
-  const asuntoCopia = `[COPIA] Pedido ${prov.nombre} · Entrega ${fmtS(fecha)}`;
-  let cuerpoCopia = `MYO Handroll Bar — Copia de pedido\nProveedor: ${prov.nombre}\nEntrega: ${fmtS(fecha)}\n\n`;
-  its.forEach(p=>{const u=p.u.trim().toLowerCase();cuerpoCopia+=`${p.n} (${p.u}) · ${Q[p.id]} ${u==='kg'?'kg':u==='l'?'l':'ud'}\n`;});
-  cuerpoCopia+=`\nEntrega después de las 10:30h`;
-  if(notas) cuerpoCopia+=`\n${notas}`;
-  setTimeout(()=>{
-    window.open(`mailto:${COPIA_EMAIL}?subject=${encodeURIComponent(asuntoCopia)}&body=${encodeURIComponent(cuerpoCopia)}`,'_blank');
-  }, 1500); // pequeño delay para no solapar con el WhatsApp/email principal
 }
 
 function closeM(){
@@ -1957,18 +1972,12 @@ function exportarStockPDF(){
     resumenTexto += '\n';
   }
 
-  // Email a Olmo
-  const asuntoInv = `Inventario MYO Handroll Bar · Semana ${semana}`;
-  setTimeout(()=>{
-    window.open(`mailto:${COPIA_EMAIL}?subject=${encodeURIComponent(asuntoInv)}&body=${encodeURIComponent(resumenTexto)}`,'_blank');
-  }, 800);
-
   // WhatsApp a Markel
   setTimeout(()=>{
     window.open(`https://wa.me/${MARKEL_WA}?text=${encodeURIComponent(resumenTexto)}`,'_blank');
-  }, 1600);
+  }, 800);
 
-  showT('📄 PDF generado · Enviando a Olmo y Markel...');
+  showT('📄 PDF generado · Enviando a Markel...');
 }
 
 // ── 15. UTILIDADES ───────────────────────────────────────────────────────────
