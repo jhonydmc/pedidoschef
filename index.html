@@ -1465,14 +1465,16 @@ function renderSendList(){
 
   // Notas por proveedor
   const notasCont = document.getElementById('prov-notas-container');
-  notasCont.innerHTML='';
-  colaEnvio.filter(p=>!p.enviado).forEach(prov=>{
-    const wrap = document.createElement('div');
-    wrap.style.cssText='margin-bottom:8px';
-    wrap.innerHTML=`<label style="font-size:.6rem;color:var(--d);letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:4px">Nota para ${prov.nombre} (opcional)</label>
-      <textarea class="mi" id="nota-${prov.id}" rows="1" placeholder="Ej: llamar antes..." style="resize:none;font-size:.75rem"></textarea>`;
-    notasCont.appendChild(wrap);
-  });
+  if(notasCont){
+    notasCont.innerHTML='';
+    colaEnvio.filter(p=>!p.enviado).forEach(prov=>{
+      const wrap = document.createElement('div');
+      wrap.style.cssText='margin-bottom:8px';
+      wrap.innerHTML=`<label style="font-size:.6rem;color:var(--d);letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:4px">Nota para ${prov.nombre} (opcional)</label>
+        <textarea class="mi" id="nota-${prov.id}" rows="1" placeholder="Ej: llamar antes..." style="resize:none;font-size:.75rem"></textarea>`;
+      notasCont.appendChild(wrap);
+    });
+  }
   const pendientes=colaEnvio.filter(p=>!p.enviado).length;
   const btn=document.getElementById('btn-enviar-todos');
   if(pendientes===0){
