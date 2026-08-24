@@ -802,6 +802,25 @@ function cargarUnidades(){
   }));
 }
 
+// Guardar y cargar cambios de nombre y precio de cualquier producto
+function saveEdicionesProductos(){
+  const edits = {};
+  PROVEEDORES.forEach(prov=>prov.productos.forEach(p=>{
+    edits[p.id] = {n: p.n, p: p.p, nota: p.nota};
+  }));
+  localStorage.setItem('ediciones_productos', JSON.stringify(edits));
+}
+function cargarEdicionesProductos(){
+  const edits = JSON.parse(localStorage.getItem('ediciones_productos')||'{}');
+  PROVEEDORES.forEach(prov=>prov.productos.forEach(p=>{
+    if(edits[p.id]){
+      p.n    = edits[p.id].n    ?? p.n;
+      p.p    = edits[p.id].p    ?? p.p;
+      p.nota = edits[p.id].nota ?? p.nota;
+    }
+  }));
+}
+
 // Guardar y cargar productos custom (añadidos manualmente)
 function saveProductosCustom(){
   const custom = [];
@@ -1191,21 +1210,34 @@ function doSearch(val){
   const v=val.toLowerCase().trim();
   document.getElementById('sclear').style.display=v?'block':'none';
   document.getElementById('sicon').style.display=v?'none':'block';
+
+  // Proveedor actualmente abierto
+  const provAbierto = PROVEEDORES.find(p=>document.getElementById('ab-'+p.id)?.classList.contains('open'));
+
   if(!v){
     PROVEEDORES.forEach(prov=>{
       const b=document.getElementById('ab-'+prov.id);
       const ah=document.getElementById('ah-'+prov.id);
-      if(b)b.querySelectorAll('.pr-swipe-wrap').forEach(w=>w.style.display='');
-      const tieneSel=prov.productos.some(p=>(Q[p.id]||0)>0);
+      if(b) b.querySelectorAll('.pr-swipe-wrap').forEach(w=>w.style.display='');
       if(b&&ah){
-        if(tieneSel){b.classList.add('open');ah.classList.add('open');}
-        else{b.classList.remove('open');ah.classList.remove('open');}
+        // Si había uno abierto antes de buscar, volver a ese estado
+        if(provAbierto && prov.id===provAbierto.id){
+          b.classList.add('open'); ah.classList.add('open');
+        } else {
+          const tieneSel=prov.productos.some(p=>(Q[p.id]||0)>0);
+          if(tieneSel){b.classList.add('open');ah.classList.add('open');}
+          else{b.classList.remove('open');ah.classList.remove('open');}
+        }
       }
     });
     return;
   }
+
   PROVEEDORES.forEach(prov=>{
     const b=document.getElementById('ab-'+prov.id);if(!b)return;
+    // Renderizar productos si aún no están cargados
+    const pl=document.getElementById('pl-'+prov.id);
+    if(pl&&pl.children.length===0) renderProds(prov);
     let any=false;
     b.querySelectorAll('.pr-swipe-wrap').forEach(w=>{
       const r=w.querySelector('.pr');
@@ -1214,8 +1246,22 @@ function doSearch(val){
       if(m)any=true;
     });
     const ah=document.getElementById('ah-'+prov.id);
-    if(any){b.classList.add('open');ah.classList.add('open');}else{b.classList.remove('open');ah.classList.remove('open');}
+    if(any){b.classList.add('open');ah.classList.add('open');}
+    else{b.classList.remove('open');ah.classList.remove('open');}
   });
+
+  // Si hay proveedor abierto y tiene resultados, mantenerlo arriba
+  if(provAbierto){
+    const b=document.getElementById('ab-'+provAbierto.id);
+    if(b&&b.classList.contains('open')){
+      setTimeout(()=>{
+        const el=document.getElementById('ah-'+provAbierto.id);
+        if(!el)return;
+        const off=document.querySelector('.search-bar')?.getBoundingClientRect().bottom||100;
+        window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-off-8,behavior:'smooth'});
+      },50);
+    }
+  }
 }
 function clearSearch(){document.getElementById('search').value='';doSearch('');}
 
@@ -1303,6 +1349,7 @@ function guardarEditor(){
   renderProds(prov);
   saveProductosCustom();
   saveUnidades();
+  saveEdicionesProductos();
   showT('Producto actualizado');
 }
 function borrarProductoEditor(){
@@ -1438,7 +1485,7 @@ function openM(){
   if(!activos.length){showT('Añade al menos un producto');return;}
   colaEnvio=activos.map(p=>({...p,enviado:false}));
   colaIdx=0;
-  document.getElementById('notas').value='';
+  document.getElementById('prov-notas-container').innerHTML='';
   renderSendList();
   iniciarFechaSelector();
   document.getElementById('mo').classList.add('on');
@@ -2337,6 +2384,7 @@ function confirmarAlbaran(){
 
 // ── 16. ARRANQUE ─────────────────────────────────────────────────────────────
 cargarUnidades();
+cargarEdicionesProductos();
 cargarProductosCustom();
 // Cargar precios actualizados por albaranes
 (function(){
