@@ -1494,7 +1494,6 @@ function renderSendList(){
       resumen+='\n';
     });
     resumen+=`_Entrega después de las 10:30h_`;
-    if(notas) resumen+=`\n_${notas}_`;
     const waUrl = `https://wa.me/${RESUMEN_WA}?text=${encodeURIComponent(resumen)}`;
 
     // Botón generar PDF resumen
