@@ -1588,13 +1588,13 @@ async function enviarSiguiente(){
 
   if(prov.email){
     const asunto=`Pedido MYO Handroll Bar · Entrega ${fmtS(fecha)}`;
-    let cuerpo=`MYO Handroll Bar\nPedido ${prov.nombre} · Entrega ${fmtS(fecha)}\n\n`;
+    let cuerpo=`MYO Handroll Bar\nCalle García de Paredes 63, Madrid\nPedido ${prov.nombre} · Entrega ${fmtS(fecha)}\n\n`;
     its.forEach(p=>{const u=p.u.trim().toLowerCase();cuerpo+=`${p.n} (${p.u}) · ${Q[p.id]} ${u==='kg'?'kg':u==='l'?'l':'ud'}\n`;});
     cuerpo+=`\nEntrega después de las 10:30h`;
     if(notas)cuerpo+=`\n${notas}`;
     window.open(`mailto:${prov.email}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`,'_blank');
   } else {
-    let m=`_Myo Handroll Bar_\n_Pedido ${prov.nombre} · Entrega ${fmtS(fecha)}_\n\n`;
+    let m=`_Myo Handroll Bar_\n_Calle García de Paredes 63, Madrid_\n_Pedido ${prov.nombre} · Entrega ${fmtS(fecha)}_\n\n`;
     its.forEach(p=>{const u=p.u.trim().toLowerCase();m+=`_*${p.n.toLowerCase()} (${p.u}) · ${Q[p.id]} ${u==='kg'?'kg':u==='l'?'l':'ud'}*_\n`;});
     m+=`\n_Entrega después de las 10:30h_`;
     if(notas)m+=`\n_${notas}_`;
@@ -2049,45 +2049,7 @@ function togglePassVis(){
 
 function generarResumenPDF(resumenTexto, fecha){
   const waUrl = `https://wa.me/${RESUMEN_WA}?text=${encodeURIComponent(resumenTexto)}`;
-  // Generar PDF limpio
-  const semana = fmtS(fecha);
-  let html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <style>
-    body{font-family:Arial,sans-serif;padding:28px;color:#1a1a1a;max-width:580px;margin:0 auto}
-    h1{font-size:1.1rem;margin-bottom:4px}
-    .sub{font-size:.7rem;color:#888;margin-bottom:20px}
-    h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.1em;color:#b8860b;border-bottom:1.5px solid #b8860b;padding-bottom:3px;margin-top:18px;margin-bottom:6px}
-    p{font-size:.82rem;margin:3px 0;padding:4px 0;border-bottom:1px solid #f0f0f0}
-    .footer{margin-top:32px;font-size:.6rem;color:#aaa;text-align:center}
-    .wa-btn{display:block;margin:20px auto;background:#25D366;color:#fff;border:none;padding:12px 24px;border-radius:8px;font-size:.85rem;cursor:pointer;text-align:center}
-  </style></head><body>
-  <h1>📋 Resumen de pedidos — MYO Handroll Bar</h1>
-  <div class="sub">Entrega: ${semana} · ${new Date().toLocaleDateString('es-ES')}</div>`;
-
-  colaEnvio.forEach(prov=>{
-    const its = prov.productos.filter(p=>(Q[p.id]||0)>0);
-    if(!its.length) return;
-    html+=`<h2>${prov.nombre}</h2>`;
-    its.forEach(p=>{
-      const u=p.u.trim().toLowerCase();
-      html+=`<p>${p.n} · <strong>${Q[p.id]} ${u==='kg'?'kg':u==='l'?'l':'ud'}</strong></p>`;
-    });
-  });
-
-  html+=`<div class="footer">PedidosChef · MYO Handroll Bar · García de Paredes 63, Madrid</div>
-  <script>
-    setTimeout(()=>{
-      if(confirm('¿Enviar resumen por WhatsApp?')){
-        window.open('${waUrl}','_blank');
-      }
-    },600);
-  <\/script>
-  </body></html>`;
-
-  const win = window.open('','_blank');
-  win.document.write(html);
-  win.document.close();
-  setTimeout(()=>win.print(), 500);
+  window.open(waUrl, '_blank');
 }
 
 // ── 15. UTILIDADES ───────────────────────────────────────────────────────────
