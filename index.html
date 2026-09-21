@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#1d4ed8">
 <meta name="mobile-web-app-capable" content="yes">
-<title>MYO — Gestión de Pedidos</title>
-<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjogIlBlZGlkb3NDaGVmIC0gTVlPIiwgInNob3J0X25hbWUiOiAiUGVkaWRvc0NoZWYiLCAiZGVzY3JpcHRpb24iOiAiR2VzdGlcdTAwZjNuIGRlIHBlZGlkb3MgTVlPIEhhbmRyb2xsIEJhciIsICJzdGFydF91cmwiOiAiL3BlZGlkb3NjaGVmLyIsICJzY29wZSI6ICIvcGVkaWRvc2NoZWYvIiwgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMxYTFhMWEiLCAidGhlbWVfY29sb3IiOiAiI2ZmZmZmZiIsICJvcmllbnRhdGlvbiI6ICJwb3J0cmFpdCIsICJpY29ucyI6IFt7InNyYyI6ICJkYXRhOmltYWdlL3BuZztiYXNlNjQsaVZCT1J3MEtHZ29BQUFBTlNVaEVVZ0FBQU1BQUFBREFDQVlBQUFCUzNHd0hBQUFFUmtsRVFWUjRuTzNkTVZMYlVCU0cwV3NtUGIyWFI1M2xVTE04OVZsQlVtUWc0TmhZc3A0c3YvZWZVNlZnakkzdXAvdHNac2loZG5ZOEhuL3YvUnpZMXpSTmg3Mis5OTIvc1lIbm1uc0djWmR2Wk9pNTFkWXhiUHJnQnA5V3RncGhrd2MxK0d5bGRRaE5IOHpnY3krdFFtanlJQWFmdmF3TjRXbnRFekQ4N0dudC9LMEt3UER6Q05iTTRVM3J3K0R6cUpZZWlSWnZBTVBQSTFzNm40c0NNUHowWU1tY3pnN0E4Tk9UdWZNNkt3RERUNC9tek8zcWowR2haMWNEY1Blblo5Zm05OXNBREQ4aitHNk9Md1pnK0JuSnBYbjJIb0JvWndOdzkyZEU1K2JhQmlEYWZ3RzQrek95MC9tMkFZajJKUUIzZnhKOG5uTWJnR2dmQWJqN2srUjkzbTBBb2dtQWFJY3F4eDl5MlFCRUV3RFJCRUMwSitkL2t0a0FSUHV4OXhObzZlM25yNDkvdjd3K2IvbzFJL2o4T2srOXZEN1gyODlmUTcvK3FvRTJ3T25GUEhkeFczM05DSzY5cmxGZjk2bGhBbUMrSmNNOWVnZ0NJSm9BaUNZQXJocjVHQ1FBb2dtQVdVYmRBZ0lnbWdDSUpnQm1HL0VZSkFDaUNZQm9BbUNSMFk1QkFpQ2FBRmhzcEMwZ0FLSUpnR2dDNENhakhJTUVRRFFCRUUwQTNHeUVZNUFBaUNZQW9nbUFWWG8vQmdtQWFBSmd0WjYzZ0FDSUpnQ2lDWUFtZWowR0NZQm9BaUNhQUdpbXgyT1FBSWdtQUpycWJRc0lnR2dDSUpvQWFLNm5ZNUFBaUNZQW11dnB2MVlWQUUzMU5QeFZBcUNoM29hL1NnQTAwdVB3VndtQUJub2QvaW9Cc0ZMUHcxOGxBRmJvZmZpcnFuN3MvUVMyTk9jWE1qMzkwdWFSakREOFZUWUFOeGhsK0tzRXdFSWpEWCtWQUZoZ3RPR3ZFZ0F6alRqOFZRSmdobEdIdjJxZ0FMYTZTQ05mL0RsR2YvM0RCRkRWL21LTmZ2RVpMQUJZU2dCRUV3RFJCRUEwQVJCTkFFUVRBTkVFUURRQkVFMEFSQk1BMFFSQU5BRVFUUUJFRXdEUkJFQTBBUkJOQUVRVEFORUVRRFFCRUUwQVJCc3VnRloveXNTZlJNa3dYQUJWNjRmWDhPY1k5djhIZUIvaUpYLy8zK0RuR1hJRHdGd0NJSm9BaUNZQW9nbUFhQUlnbWdDSUpnQ2lDWUJvQWlDYUFJZ21BS0lKZ0dnQ0lKb0FpQ1lBb2dtQWFBSWdtZ0NJSmdDaUNZQm9BaUNhQUlnbUFLSUpnR2dDSUpvQWlDWUFvZ21BYUFJZ21nQ0lKZ0NpQ1lCb0FpQ2FBSWdtQUtJSmdHZ0NJSm9BaUNZQW9nbUFhQUlnMnZBQnZMdytOLzI2RWZpWi9ETjhBRlhYTDJUQ2hUN2xaL0pYUkFCVmx5OW95b1UreDgrazZuQThIbi92L1NSZ0x6RWJBTTRSQU5HZXBtazY3UDBrWUM4MkFORUVRRFFCRU8ycHFzcjdBQkpOMDNTd0FZZ21BS0o5Qk9BWVJKTDNlYmNCaVBZbEFGdUFCSi9uM0FZZzJuOEIyQUtNN0hTK2JRQ2luUTNBRm1CRTUrYmFCaURheFFCc0FVWnlhWjYvM1FBaVlBVGZ6ZkhWSTVBSTZObTErZlVlZ0dpekFyQUY2TkdjdVoyOUFVUkFUK2JPNjZJamtBam93Wkk1WGZ3ZVFBUThzcVh6dVdxWS9WVTVIc1d0TitaVm53TFpCanlDTlhPNCttTlFFYkNudGZQWGRIZ2RpYmlYVmpmZVRlN2VRbUFyclU4Y214NWZoRUFyV3gyMTczSitGd0szMnZvOTV0M2Z3SXFCYSs3NXdjb2ZIZU1VdU5qN1NVb0FBQUFBU1VWT1JLNUNZSUk9IiwgInNpemVzIjogIjE5MngxOTIiLCAidHlwZSI6ICJpbWFnZS9wbmciLCAicHVycG9zZSI6ICJhbnkgbWFza2FibGUifSwgeyJzcmMiOiAiZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9SdzBLR2dvQUFBQU5TVWhFVWdBQUFnQUFBQUlBQ0FZQUFBRDBlTlQ2QUFBTjgwbEVRVlI0bk8zZHNYTGJTQnFGVVdocWN1ZDZQTWQrSE1kK1BPVitBbSt3Ulk5RWtSUkFOTkRkL3owbjNLb2RrUmdXN3NlRzdIbFpPTlhyNit1ZjNxOEJZRlJ2YjI4dnZWOURDaGY2QUVZZW9EMXgwSmFMdVpPeEIraEhGRHpQaGR2STRBT01TeENzNTBLdFlQUUI1aU1HSG5OeGJqRDRBUFVJZ285Y2pIY01QMEI5UXVELzRpK0MwUWZJbFJ3RHNXL2M4QU53a1JnQ2NXL1k4QU53VDFJSVJMeFJvdy9BVnRWam9QU2JNL3dBN0ZVMUJQN3AvUUtPWXZ3QmFLSHFucFNybXFyL29nRG9yOUpwUUprM1l2Z0JPRXVGRUpqK0RSaCtBSHFaT1FTbS9oMEE0dzlBVHpQdjBKVGxNdk1GQjZDbTJVNERwanNCTVA0QWpHaTJmWm9xQUdhN3VBQmttV21ucGppdW1PbUNBc0N5alA5SVlQZ1RBT01Qd0l4RzM2K2hBMkQwaXdjQWo0eThZME1lVDR4OHdRRGdHYU05RWhqdUJNRDRBMURSYVBzMlZBQ01kbkVBb0tXUmRtNllBQmpwb2dEQVVVYlp1eUVDWUpTTEFRQm5HR0gzdWdmQUNCY0JBTTdXZS8rNkJrRHZOdzhBUGZYY3dXNEJZUHdCb044ZWRna0E0dzhBLytteGk2Y0hnUEVIZ00vTzNzZFRBOEQ0QThCOVorN2thUUZnL0FIZ2EyZnQ1U2tCWVB3QllMMHpkdlB3QUREK0FMRGQwZnQ1YUFBWWZ3QjQzcEU3MnYxdkFnUUF6bmRZQVBqMkR3RDdIYlduaHdTQThRZUFkbzdZMWVZQllQd0JvTDNXKytwM0FBQWdVTk1BOE8wZkFJN1RjbWViQllEeEI0RGp0ZHJiSmdGZy9BSGdQQzEyMSs4QUFFQ2czUUhnMno4QW5HL3YvdTRLQU9NUEFQM3MyV0dQQUFBZzBOTUI0TnMvQVBUMzdCNDdBUUNBUUU4RmdHLy9BRENPWjNiWkNRQUFCTm9jQUw3OUE4QjR0dTd6cGdBdy9nQXdyaTA3N1JFQUFBUmFIUUMrL1FQQStOYnV0Uk1BQUFna0FBQWcwS29BY1B3UEFQTllzOXRPQUFBZzBKY0I0TnMvQU16bnEvMTJBZ0FBZ1I0R2dHLy9BREN2Unp2dUJBQUFBZ2tBQUFoME53QWMvd1BBL083dHVSTUFBQWgwTXdCOCt3ZUFPbTd0dWhNQUFBZ2tBQUFna0FBQWdFQ2ZBc0R6ZndDbzUzcmZuUUFBUUNBQkFBQ0JQZ1NBNDM4QXFPdjl6anNCQUlCQUFnQUFBZ2tBQUFqME53QTgvd2VBK2k1Nzd3UUFBQUlKQUFBSUpBQUFJSkFBQUlCQUw4dmlGd0FCSUkwVEFBQUlKQUFBSUpBQUFJQkFBZ0FBQWdrQUFBZ2tBQUFnMElzL0FzZ2p2Mzc4L3ZTL2ZmLzV6YytBRzI1OXpyYTY5N244OWVPM3p5eE5DUUJ1V25NajIzc3pxdkl6b01Yd1g3ditYQW9BV3ZNSWdFL1czc3oyM1BTcS9BdzQ2dk56NjUvcnMwcExBb0FQdHQ1Z25ya2hWZmtaY1BUbnh1ZVNJd2tBZ0NlY05jNGlnS1A0SFFEKzJuT2pXZnRzc3NyUElGdnZVZlk1cFFVbkFBQVFTQUFBYk5ENzJ6KzBJZ0FBSmlOQ2FFRUFBRUFnQVFBd0lhY0E3Q1VBQUNDUUFBQ0FRQUlBWUZJZUE3Q0hBQUNBUUFJQUFBSUpBSUNKZVF6QXN3UUFBQVFTQUFBUVNBQUFUTTVqQUo0aEFBQWdrQUFBZ0VBQ0FLQUFqd0hZU2dBQVFDQUJBQUNCQkFCQUVSNERzSVVBQUlCQUFnQ2dFS2NBckNVQUFDQ1FBQUNBUUFJQW9CaVBBVmhEQUFCQUlBRUFBSUVFQUVCQkhnUHdGUUVBQUlFRUFBQUVFZ0FBUlhrTXdDTUNBQUFDQ1FBQUNDUUFBQXJ6R0lCN0JBQUFCQklBQUJCSUFBQVU1ekVBdHdnQUFBZ2tBQUFDT0FYZ21nQUFnRUFDQUFBQ0NRQ0FFQjREOEo0QUFJQkFBZ0FBQWdrQWdDQWVBM0FoQUFBZ2tBQUFnRUFDQUNDTXh3QXNpd0FBZ0VnQ0FBQUNDUUNBUUI0RElBQUFJSkFBQUlCQUFnQWdsTWNBMlFRQUFBUVNBQURCbkFMa0VnQUFFRWdBQUVBZ0FRQVF6bU9BVEFJQUFBSUpBQUFJSkFBQThCZ2drQUFBZ0VBQ0FBQUNDUUFBbG1YeEdDQ05BQUNBUUFJQUFBSUpBQUQrOGhnZ2h3QUFnRUFDQUFBQ0NRQUFQdkFZSUlNQUFJQkFBZ0NBVDV3QzFDY0FBQ0NRQUFDQVFBSUFnSnM4QnFoTkFBQkFJQUVBQUlFRUFBQjNlUXhRbHdBQWdFQUNBQUFDQ1FBQUh2SVlvQ1lCQUFDQkJBQUFCQklBQUh6Slk0QjZCQUFBQkJJQUFCQklBQUN3aXNjQXRRZ0FBQWdrQUFCWXpTbEFIUUlBQUFJSkFBQUlKQUFBMk1SamdCb0VBQUFFRWdBQUVFZ0FBTENaeHdEekV3QUFFRWdBQUxEWjk1L2ZlcjhFZGhJQUFHeGkvR3NRQUFDc1p2enJFQUFBckdMOGF4RUFBSHpKK05jakFBQjR5UGpYSkFBQXVNdjQxeVVBQUxqSitOY21BQUQ0eFBqWEp3QUErTUQ0WnhBQUFQeGwvSE1JQUFDV1pUSCthUVFBQU1ZL2tBQUFDR2Y4TXdrQWdHREdQNWNBQUFobC9MTUpBSUJBeGg4QkFCREcrTE1zQWdBZ2l2SG5RZ0FBaEREK3ZQZHY3eGRBRGI5Ky9DN3hNNkFxNDg4MUp3QUF4UmwvYmhFQUFJVVpmKzRSQUFCRkdYOGVFUUFBQlJsL3ZpSUFBSW94L3F3aEFBQUtNZjZzSlFBQWlqRCtiQ0VBQUFvdy9td2xBQUFtWi94NWhnQUFtSmp4NTFrQ2dML1NieVRwNzUvNStNeXlod0FBbUpEeFp5OEJ3QWVwTjVYVTk4MmNmRjVwUVFEd1Nkck5KZTM5TWplZlYxcnhud1BtcHN0TnB2Si9ndGVObE5uNHpOS1NBT0NoaWlIZ0pncmdFUUFBUkJJQUFCQklBQUJBSUFFQUFJRUVBQUFFRWdBQUVFZ0FBRUFnQVFBQWdRUUFBQVFTQUFBUVNBQUFRQ0FCQUFDQkJBQUFCQklBQUJCSUFBQkFJQUVBQUlFRUFBQUVFZ0FBRUVnQUFFQWdBUUFBZ1FRQUFBUVNBQUFRU0FBQVFDQUJBQUNCQkFBQUJCSUFBQkJJQUFCQUlBRUFBSUVFQUFBRUVnQUFFRWdBQUVBZ0FRQUFnUVFBQUFRU0FBQVFTQUFBUUNBQkFBQ0JCQUFBQkJJQUFCQklBQUJBSUFFQUFJRUVBQUFFRWdBQUVFZ0FBRUFnQVFBQWdRUUFBQVFTQUFBUVNBQUFRQ0FCQUFDQkJBQUFCQklBQUJCSUFBQkFJQUVBQUlFRUFBQUVFZ0FBRzN6LytTM3E1MUtYQUFDQVFBSUFZS096djQzNzlzOFJCQUFBQkJJQUFCQklBTEJLbFNQSUt1K0R2bjc5K0YzNjU1RkJBQUJBSUFIQWFyTi9lNTc5OVFPMEpBRFlaTllSbmZWMU01NWV4L0VlQTlDYUFHQ3oyY1owdHRjTGNBWUJ3Rk5tR2RWWlhpZkEyZjd0L1FLWTEyVmNSenlhTlB3QWp3a0FkbnMvdGoxandPZ0RyT2NSQUFBRUVnQUFFRWdBQUVBZ0FRQUFnUVFBQUFRU0FBQVFTQUFBUUNBQkFBQ0JCQUFBQkJJQUFCQklBQUJBSUFFQUFJRUVBQUFFRWdBQUVFZ0FBRUFnQVFBQWdRUUFBQVFTQUFBUVNBQUFRQ0FCQUFDQkJBQUFCQklBQUJCSUFBQkFJQUVBQUlFRUFBQUVFZ0FBRUVnQUFFQWdBUUFBZ1FRQUFBUVNBQUFRU0FBQVFDQUJBQUNCQkFBQUJCSUFBQkJJQUFCQUlBRUFBSUVFQUFBRUVnQUFFRWdBQUVBZ0FRQUFnUVFBQUFRU0FBQVFTQUFBUUNBQkFBQ0JCQUFBQkJJQUFCQklBQUJBSUFFQUFJRUVBQUFFRWdBQUVFZ0FBRUFnQVFBQWdRUUFBQVFTQUFBUVNBQUFRQ0FCQUFDQkJBQUFCQklBQUJCSUFBQkFJQUVBQUlFRUFBQUVFZ0FBRUVnQUFFQWdBUUFBZ1FRQUFBUVNBQUFRU0FBQVFDQUJBQUNCQkFBQUJCSUFBQkJJQUFCQUlBRUFBSUVFQUFBRUVnQUFFRWdBQUVBZ0FRQUFnUVFBQUFRU0FBQVFTQUFBUUNBQkFBQ0JCQUFBQkJJQUFCQklBQUJBSUFFQUFJRUVBQUFFRWdBQUVFZ0FBRUFnQVFBQWdRUUFBQVFTQUFBUVNBQUFRQ0FCQUFDQkJBQUFCQklBQUJCSUFBQkFJQUVBQUlFRUFBQUVFZ0FBRUVnQUFFQWdBUUFBZ1FRQUFBUVNBQUFRU0FBQVFDQUJBQUNCQkFBQUJCSUFBQkJJQUFCQUlBRUFBSUVFQUFBRUVnQUFFRWdBME5UM245K2lmaTU1Zk1hcFFnQUFRQ0FCQUFDQkJBRE5uWDFVNldpVXMvbU1VNEVBQUlCQUFvQkRuUFdOeFRjamV2RVpaM1lDZ01NY2ZlTnlZNlEzbjNGbUpnQTQxRkUzTURkR1J1RXp6cXdFQUlkcmZTTnpZMlEwUHVQTVNBQndpbFkzTkRkR1J1VXp6bXhlWGw5Zi8vUitFV1Q1OWVQMzV2K1BteUl6OFJsbkJnS0FyaDdkS04wUXFjQm5uRkVKQUFBSTlNL2IyOXRMN3hjQkFKekxMd0VDUUNBQkFBQ0JCQUFBQkJJQUFCQklBQUJBSUFFQUFJSCtXWlpsOFVjQkFTREgyOXZiaXhNQUFBZ2tBQUFna0FBQWdFQUNBQUFDL1EwQXZ3Z0lBUFZkOXQ0SkFBQUVFZ0FBRUVnQUFFQ2dEd0hnOXdBQW9LNzNPKzhFQUFBQ0NRQUFDUFFwQUR3R0FJQjZydmZkQ1FBQUJCSUFBQkJJQUFCQW9Kc0I0UGNBQUtDT1c3dnVCQUFBQXQwTkFLY0FBREMvZTN2dUJBQUFBZ2tBQUFqME1BQThCZ0NBZVQzYWNTY0FBQkRveXdCd0NnQUE4L2xxdjUwQUFFQ2dWUUhnRkFBQTVyRm10NTBBQUVBZ0FRQUFnVllIZ01jQUFEQyt0WHZ0QkFBQUFtMEtBS2NBQURDdUxUdTkrUVJBQkFEQWVMYnVzMGNBQUJEb3FRQndDZ0FBNDNobWw1MEFBRUNncHdQQUtRQUE5UGZzSGpzQkFJQkF1d0xBS1FBQTlMTm5oM2VmQUlnQUFEamYzdjMxQ0FBQUFqVUpBS2NBQUhDZUZydmI3QVJBQkFEQThWcnRiZE5IQUNJQUFJN1RjbWY5RGdBQUJHb2VBRTRCQUtDOTF2dDZ5QW1BQ0FDQWRvN1kxY01lQVlnQUFOanZxRDMxT3dBQUVPalFBSEFLQUFEUE8zSkhEejhCRUFFQXNOM1IrM25LSXdBUkFBRHJuYkdicC8wT2dBZ0FnSytkdFplbi9oS2dDQUNBKzg3Y3lkUC9GSUFJQUlEUHp0N0hMbjhNVUFRQXdIOTY3R0szdndkQUJBQkF2ejNzK2hjQmlRQUFrdlhjd2U1L0U2QUlBQ0JSNy8zckhnREwwdjhpQU1DWlJ0aTlJUUpnV2NhNEdBQnd0RkgyYnBnQVdKWnhMZ29BSEdHa25Sc3FBSlpscklzREFLMk10bTlEdlpocnI2K3ZmM3EvQmdEWVk3VGh2eGp1Qk9DOVVTOGFBS3d4OG80TkhRRExNdmJGQTRCN1J0K3ZvVi9jTlk4RUFCamQ2TU4vTWZ3SndIdXpYRlFBTXMyMFUxTUZ3TExNZFhFQnlESGJQazMxWXE5NUpBQkFiN01OLzhWMEp3RHZ6WHJSQWFoaDVoMmE5b1ZmY3hvQXdGbG1IdjZMNmQvQU5TRUF3RkVxRFA5Rm1UZHlUUWdBMEVxbDRiK1krbmNBSHFuNEx3dUE4MVhkazVKdjZwclRBQUMycWpyOEY2WGYzQzFpQUlCN3FvLytlekZ2OUpvUUFPQWlhZmd2NHQ3d05TRUFrQ3R4K0M5aTMvZ3RZZ0NndnVUUmY4OUZ1RUVJQU5SaitEOXlNVllRQkFEek1maVB1VGdiaVFHQWNSbjk5VnlvblFRQlFEOEcvM2t1M0FGRUFVQjd4cjZ0L3dHeVkvZkF5QWFvSXdBQUFBQkpSVTVFcmtKZ2dnPT0iLCAic2l6ZXMiOiAiNTEyeDUxMiIsICJ0eXBlIjogImltYWdlL3BuZyIsICJwdXJwb3NlIjogImFueSBtYXNrYWJsZSJ9XX0=">
+<title>PedidosChef — Gestión de Pedidos</title>
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjogIlBlZGlkb3NDaGVmIiwgInNob3J0X25hbWUiOiAiUGVkaWRvc0NoZWYiLCAiZGVzY3JpcHRpb24iOiAiR2VzdGnDs24gZGUgcGVkaWRvcyBwYXJhIHJlc3RhdXJhbnRlcyIsICJzdGFydF91cmwiOiAiL3BlZGlkb3NjaGVmLyIsICJzY29wZSI6ICIvcGVkaWRvc2NoZWYvIiwgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwZjE3MmEiLCAidGhlbWVfY29sb3IiOiAiIzFkNGVkOCIsICJvcmllbnRhdGlvbiI6ICJwb3J0cmFpdCIsICJpY29ucyI6IFt7InNyYyI6ICJkYXRhOmltYWdlL3BuZztiYXNlNjQsaVZCT1J3MEtHZ29BQUFBTlNVaEVVZ0FBQU1BQUFBREFDQVlBQUFCUzNHd0hBQUFFUmtsRVFWUjRuTzNkTVZMYlVCU0cwV3NtUGIyWFI1M2xVTE04OVZsQlVtUWc0TmhZc3A0c3YvZWZVNlZnakkzdXAvdHNac2loZG5ZOEhuL3YvUnpZMXpSTmg3Mis5OTIvc1lIbm1uc0djWmR2Wk9pNTFkWXhiUHJnQnA5V3RncGhrd2MxK0d5bGRRaE5IOHpnY3krdFFtanlJQWFmdmF3TjRXbnRFekQ4N0dudC9LMEt3UER6Q05iTTRVM3J3K0R6cUpZZWlSWnZBTVBQSTFzNm40c0NNUHowWU1tY3pnN0E4Tk9UdWZNNkt3RERUNC9tek8zcWowR2haMWNEY1Blblo5Zm05OXNBREQ4aitHNk9Md1pnK0JuSnBYbjJIb0JvWndOdzkyZEU1K2JhQmlEYWZ3RzQrek95MC9tMkFZajJKUUIzZnhKOG5uTWJnR2dmQWJqN2srUjkzbTBBb2dtQWFJY3F4eDl5MlFCRUV3RFJCRUMwSitkL2t0a0FSUHV4OXhObzZlM25yNDkvdjd3K2IvbzFJL2o4T2srOXZEN1gyODlmUTcvK3FvRTJ3T25GUEhkeFczM05DSzY5cmxGZjk2bGhBbUMrSmNNOWVnZ0NJSm9BaUNZQXJocjVHQ1FBb2dtQVdVYmRBZ0lnbWdDSUpnQm1HL0VZSkFDaUNZQm9BbUNSMFk1QkFpQ2FBRmhzcEMwZ0FLSUpnR2dDNENhakhJTUVRRFFCRUUwQTNHeUVZNUFBaUNZQW9nbUFWWG8vQmdtQWFBSmd0WjYzZ0FDSUpnQ2lDWUFtZWowR0NZQm9BaUNhQUdpbXgyT1FBSWdtQUpycWJRc0lnR2dDSUpvQWFLNm5ZNUFBaUNZQW11dnB2MVlWQUUzMU5QeFZBcUNoM29hL1NnQTAwdVB3VndtQUJub2QvaW9Cc0ZMUHcxOGxBRmJvZmZpcnFuN3MvUVMyTk9jWE1qMzkwdWFSakREOFZUWUFOeGhsK0tzRXdFSWpEWCtWQUZoZ3RPR3ZFZ0F6alRqOFZRSmdobEdIdjJxZ0FMYTZTQ05mL0RsR2YvM0RCRkRWL21LTmZ2RVpMQUJZU2dCRUV3RFJCRUEwQVJCTkFFUVRBTkVFUURRQkVFMEFSQk1BMFFSQU5BRVFUUUJFRXdEUkJFQTBBUkJOQUVRVEFORUVRRFFCRUUwQVJCc3VnRloveXNTZlJNa3dYQUJWNjRmWDhPY1k5djhIZUIvaUpYLy8zK0RuR1hJRHdGd0NJSm9BaUNZQW9nbUFhQUlnbWdDSUpnQ2lDWUJvQWlDYUFJZ21BS0lKZ0dnQ0lKb0FpQ1lBb2dtQWFBSWdtZ0NJSmdDaUNZQm9BaUNhQUlnbUFLSUpnR2dDSUpvQWlDWUFvZ21BYUFJZ21nQ0lKZ0NpQ1lCb0FpQ2FBSWdtQUtJSmdHZ0NJSm9BaUNZQW9nbUFhQUlnMnZBQnZMdytOLzI2RWZpWi9ETjhBRlhYTDJUQ2hUN2xaL0pYUkFCVmx5OW95b1UreDgrazZuQThIbi92L1NSZ0x6RWJBTTRSQU5HZXBtazY3UDBrWUM4MkFORUVRRFFCRU8ycHFzcjdBQkpOMDNTd0FZZ21BS0o5Qk9BWVJKTDNlYmNCaVBZbEFGdUFCSi9uM0FZZzJuOEIyQUtNN0hTK2JRQ2luUTNBRm1CRTUrYmFCaURheFFCc0FVWnlhWjYvM1FBaVlBVGZ6ZkhWSTVBSTZObTErZlVlZ0dpekFyQUY2TkdjdVoyOUFVUkFUK2JPNjZJamtBam93Wkk1WGZ3ZVFBUThzcVh6dVdxWS9WVTVIc1d0TitaVm53TFpCanlDTlhPNCttTlFFYkNudGZQWGRIZ2RpYmlYVmpmZVRlN2VRbUFyclU4Y214NWZoRUFyV3gyMTczSitGd0szMnZvOTV0M2Z3SXFCYSs3NXdjb2ZIZU1VdU5qN1NVb0FBQUFBU1VWT1JLNUNZSUk9IiwgInNpemVzIjogIjE5MngxOTIiLCAidHlwZSI6ICJpbWFnZS9wbmciLCAicHVycG9zZSI6ICJhbnkgbWFza2FibGUifSwgeyJzcmMiOiAiZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9SdzBLR2dvQUFBQU5TVWhFVWdBQUFnQUFBQUlBQ0FZQUFBRDBlTlQ2QUFBTjgwbEVRVlI0bk8zZHNYTGJTQnFGVVdocWN1ZDZQTWQrSE1kK1BPVitBbSt3Ulk5RWtSUkFOTkRkL3owbjNLb2RrUmdXN3NlRzdIbFpPTlhyNit1ZjNxOEJZRlJ2YjI4dnZWOURDaGY2QUVZZW9EMXgwSmFMdVpPeEIraEhGRHpQaGR2STRBT01TeENzNTBLdFlQUUI1aU1HSG5OeGJqRDRBUFVJZ285Y2pIY01QMEI5UXVELzRpK0MwUWZJbFJ3RHNXL2M4QU53a1JnQ2NXL1k4QU53VDFJSVJMeFJvdy9BVnRWam9QU2JNL3dBN0ZVMUJQN3AvUUtPWXZ3QmFLSHFucFNybXFyL29nRG9yOUpwUUprM1l2Z0JPRXVGRUpqK0RSaCtBSHFaT1FTbS9oMEE0dzlBVHpQdjBKVGxNdk1GQjZDbTJVNERwanNCTVA0QWpHaTJmWm9xQUdhN3VBQmttV21ucGppdW1PbUNBc0N5alA5SVlQZ1RBT01Qd0l4RzM2K2hBMkQwaXdjQWo0eThZME1lVDR4OHdRRGdHYU05RWhqdUJNRDRBMURSYVBzMlZBQ01kbkVBb0tXUmRtNllBQmpwb2dEQVVVYlp1eUVDWUpTTEFRQm5HR0gzdWdmQUNCY0JBTTdXZS8rNkJrRHZOdzhBUGZYY3dXNEJZUHdCb044ZWRna0E0dzhBLytteGk2Y0hnUEVIZ00vTzNzZFRBOEQ0QThCOVorN2thUUZnL0FIZ2EyZnQ1U2tCWVB3QllMMHpkdlB3QUREK0FMRGQwZnQ1YUFBWWZ3QjQzcEU3MnYxdkFnUUF6bmRZQVBqMkR3RDdIYlduaHdTQThRZUFkbzdZMWVZQllQd0JvTDNXKytwM0FBQWdVTk1BOE8wZkFJN1RjbWViQllEeEI0RGp0ZHJiSmdGZy9BSGdQQzEyMSs4QUFFQ2czUUhnMno4QW5HL3YvdTRLQU9NUEFQM3MyV0dQQUFBZzBOTUI0TnMvQVBUMzdCNDdBUUNBUUU4RmdHLy9BRENPWjNiWkNRQUFCTm9jQUw3OUE4QjR0dTd6cGdBdy9nQXdyaTA3N1JFQUFBUmFIUUMrL1FQQStOYnV0Uk1BQUFna0FBQWcwS29BY1B3UEFQTllzOXRPQUFBZzBKY0I0TnMvQU16bnEvMTJBZ0FBZ1I0R2dHLy9BREN2Unp2dUJBQUFBZ2tBQUFoME53QWMvd1BBL083dHVSTUFBQWgwTXdCOCt3ZUFPbTd0dWhNQUFBZ2tBQUFna0FBQWdFQ2ZBc0R6ZndDbzUzcmZuUUFBUUNBQkFBQ0JQZ1NBNDM4QXFPdjl6anNCQUlCQUFnQUFBZ2tBQUFqME53QTgvd2VBK2k1Nzd3UUFBQUlKQUFBSUpBQUFJSkFBQUlCQUw4dmlGd0FCSUkwVEFBQUlKQUFBSUpBQUFJQkFBZ0FBQWdrQUFBZ2tBQUFnMElzL0FzZ2p2Mzc4L3ZTL2ZmLzV6YytBRzI1OXpyYTY5N244OWVPM3p5eE5DUUJ1V25NajIzc3pxdkl6b01Yd1g3ditYQW9BV3ZNSWdFL1czc3oyM1BTcS9BdzQ2dk56NjUvcnMwcExBb0FQdHQ1Z25ya2hWZmtaY1BUbnh1ZVNJd2tBZ0NlY05jNGlnS1A0SFFEKzJuT2pXZnRzc3NyUElGdnZVZlk1cFFVbkFBQVFTQUFBYk5ENzJ6KzBJZ0FBSmlOQ2FFRUFBRUFnQVFBd0lhY0E3Q1VBQUNDUUFBQ0FRQUlBWUZJZUE3Q0hBQUNBUUFJQUFBSUpBSUNKZVF6QXN3UUFBQVFTQUFBUVNBQUFUTTVqQUo0aEFBQWdrQUFBZ0VBQ0FLQUFqd0hZU2dBQVFDQUJBQUNCQkFCQUVSNERzSVVBQUlCQUFnQ2dFS2NBckNVQUFDQ1FBQUNBUUFJQW9CaVBBVmhEQUFCQUlBRUFBSUVFQUVCQkhnUHdGUUVBQUlFRUFBQUVFZ0FBUlhrTXdDTUNBQUFDQ1FBQUNDUUFBQXJ6R0lCN0JBQUFCQklBQUJCSUFBQVU1ekVBdHdnQUFBZ2tBQUFDT0FYZ21nQUFnRUFDQUFBQ0NRQ0FFQjREOEo0QUFJQkFBZ0FBQWdrQWdDQWVBM0FoQUFBZ2tBQUFnRUFDQUNDTXh3QXNpd0FBZ0VnQ0FBQUNDUUNBUUI0RElBQUFJSkFBQUlCQUFnQWdsTWNBMlFRQUFBUVNBQURCbkFMa0VnQUFFRWdBQUVBZ0FRQVF6bU9BVEFJQUFBSUpBQUFJSkFBQThCZ2drQUFBZ0VBQ0FBQUNDUUFBbG1YeEdDQ05BQUNBUUFJQUFBSUpBQUQrOGhnZ2h3QUFnRUFDQUFBQ0NRQUFQdkFZSUlNQUFJQkFBZ0NBVDV3QzFDY0FBQ0NRQUFDQVFBSUFnSnM4QnFoTkFBQkFJQUVBQUlFRUFBQjNlUXhRbHdBQWdFQUNBQUFDQ1FBQUh2SVlvQ1lCQUFDQkJBQUFCQklBQUh6Slk0QjZCQUFBQkJJQUFCQklBQUN3aXNjQXRRZ0FBQWdrQUFCWXpTbEFIUUlBQUFJSkFBQUlKQUFBMk1SamdCb0VBQUFFRWdBQUVFZ0FBTENaeHdEekV3QUFFRWdBQUxEWjk1L2ZlcjhFZGhJQUFHeGkvR3NRQUFDc1p2enJFQUFBckdMOGF4RUFBSHpKK05jakFBQjR5UGpYSkFBQXVNdjQxeVVBQUxqSitOY21BQUQ0eFBqWEp3QUErTUQ0WnhBQUFQeGwvSE1JQUFDV1pUSCthUVFBQU1ZL2tBQUFDR2Y4TXdrQWdHREdQNWNBQUFobC9MTUpBSUJBeGg4QkFCREcrTE1zQWdBZ2l2SG5RZ0FBaEREK3ZQZHY3eGRBRGI5Ky9DN3hNNkFxNDg4MUp3QUF4UmwvYmhFQUFJVVpmKzRSQUFCRkdYOGVFUUFBQlJsL3ZpSUFBSW94L3F3aEFBQUtNZjZzSlFBQWlqRCtiQ0VBQUFvdy9td2xBQUFtWi94NWhnQUFtSmp4NTFrQ2dML1NieVRwNzUvNStNeXlod0FBbUpEeFp5OEJ3QWVwTjVYVTk4MmNmRjVwUVFEd1Nkck5KZTM5TWplZlYxcnhud1BtcHN0TnB2Si9ndGVObE5uNHpOS1NBT0NoaWlIZ0pncmdFUUFBUkJJQUFCQklBQUJBSUFFQUFJRUVBQUFFRWdBQUVFZ0FBRUFnQVFBQWdRUUFBQVFTQUFBUVNBQUFRQ0FCQUFDQkJBQUFCQklBQUJCSUFBQkFJQUVBQUlFRUFBQUVFZ0FBRUVnQUFFQWdBUUFBZ1FRQUFBUVNBQUFRU0FBQVFDQUJBQUNCQkFBQUJCSUFBQkJJQUFCQUlBRUFBSUVFQUFBRUVnQUFFRWdBQUVBZ0FRQUFnUVFBQUFRU0FBQVFTQUFBUUNBQkFBQ0JCQUFBQkJJQUFCQklBQUJBSUFFQUFJRUVBQUFFRWdBQUVFZ0FBRUFnQVFBQWdRUUFBQVFTQUFBUVNBQUFRQ0FCQUFDQkJBQUFCQklBQUJCSUFBQkFJQUVBQUlFRUFBQUVFZ0FBRzN6LytTM3E1MUtYQUFDQVFBSUFZS096djQzNzlzOFJCQUFBQkJJQUFCQklBTEJLbFNQSUt1K0R2bjc5K0YzNjU1RkJBQUJBSUFIQWFyTi9lNTc5OVFPMEpBRFlaTllSbmZWMU01NWV4L0VlQTlDYUFHQ3oyY1owdHRjTGNBWUJ3Rk5tR2RWWlhpZkEyZjd0L1FLWTEyVmNSenlhTlB3QWp3a0FkbnMvdGoxandPZ0RyT2NSQUFBRUVnQUFFRWdBQUVBZ0FRQUFnUVFBQUFRU0FBQVFTQUFBUUNBQkFBQ0JCQUFBQkJJQUFCQklBQUJBSUFFQUFJRUVBQUFFRWdBQUVFZ0FBRUFnQVFBQWdRUUFBQVFTQUFBUVNBQUFRQ0FCQUFDQkJBQUFCQklBQUJCSUFBQkFJQUVBQUlFRUFBQUVFZ0FBRUVnQUFFQWdBUUFBZ1FRQUFBUVNBQUFRU0FBQVFDQUJBQUNCQkFBQUJCSUFBQkJJQUFCQUlBRUFBSUVFQUFBRUVnQUFFRWdBQUVBZ0FRQUFnUVFBQUFRU0FBQVFTQUFBUUNBQkFBQ0JCQUFBQkJJQUFCQklBQUJBSUFFQUFJRUVBQUFFRWdBQUVFZ0FBRUFnQVFBQWdRUUFBQVFTQUFBUVNBQUFRQ0FCQUFDQkJBQUFCQklBQUJCSUFBQkFJQUVBQUlFRUFBQUVFZ0FBRUVnQUFFQWdBUUFBZ1FRQUFBUVNBQUFRU0FBQVFDQUJBQUNCQkFBQUJCSUFBQkJJQUFCQUlBRUFBSUVFQUFBRUVnQUFFRWdBQUVBZ0FRQUFnUVFBQUFRU0FBQVFTQUFBUUNBQkFBQ0JCQUFBQkJJQUFCQklBQUJBSUFFQUFJRUVBQUFFRWdBQUVFZ0FBRUFnQVFBQWdRUUFBQVFTQUFBUVNBQUFRQ0FCQUFDQkJBQUFCQklBQUJCSUFBQkFJQUVBQUlFRUFBQUVFZ0FBRUVnQUFFQWdBUUFBZ1FRQUFBUVNBQUFRU0FBQVFDQUJBQUNCQkFBQUJCSUFBQkJJQUFCQUlBRUFBSUVFQUFBRUVnQUFFRWdBME5UM245K2lmaTU1Zk1hcFFnQUFRQ0FCQUFDQkJBRE5uWDFVNldpVXMvbU1VNEVBQUlCQUFvQkRuUFdOeFRjamV2RVpaM1lDZ01NY2ZlTnlZNlEzbjNGbUpnQTQxRkUzTURkR1J1RXp6cXdFQUlkcmZTTnpZMlEwUHVQTVNBQndpbFkzTkRkR1J1VXp6bXhlWGw5Zi8vUitFV1Q1OWVQMzV2K1BteUl6OFJsbkJnS0FyaDdkS04wUXFjQm5uRkVKQUFBSTlNL2IyOXRMN3hjQkFKekxMd0VDUUNBQkFBQ0JCQUFBQkJJQUFCQklBQUJBSUFFQUFJSCtXWlpsOFVjQkFTREgyOXZiaXhNQUFBZ2tBQUFna0FBQWdFQUNBQUFDL1EwQXZ3Z0lBUFZkOXQ0SkFBQUVFZ0FBRUVnQUFFQ2dEd0hnOXdBQW9LNzNPKzhFQUFBQ0NRQUFDUFFwQUR3R0FJQjZydmZkQ1FBQUJCSUFBQkJJQUFCQW9Kc0I0UGNBQUtDT1c3dnVCQUFBQXQwTkFLY0FBREMvZTN2dUJBQUFBZ2tBQUFqME1BQThCZ0NBZVQzYWNTY0FBQkRveXdCd0NnQUE4L2xxdjUwQUFFQ2dWUUhnRkFBQTVyRm10NTBBQUVBZ0FRQUFnVllIZ01jQUFEQyt0WHZ0QkFBQUFtMEtBS2NBQURDdUxUdTkrUVJBQkFEQWVMYnVzMGNBQUJEb3FRQndDZ0FBNDNobWw1MEFBRUNncHdQQUtRQUE5UGZzSGpzQkFJQkF1d0xBS1FBQTlMTm5oM2VmQUlnQUFEamYzdjMxQ0FBQUFqVUpBS2NBQUhDZUZydmI3QVJBQkFEQThWcnRiZE5IQUNJQUFJN1RjbWY5RGdBQUJHb2VBRTRCQUtDOTF2dDZ5QW1BQ0FDQWRvN1kxY01lQVlnQUFOanZxRDMxT3dBQUVPalFBSEFLQUFEUE8zSkhEejhCRUFFQXNOM1IrM25LSXdBUkFBRHJuYkdicC8wT2dBZ0FnSytkdFplbi9oS2dDQUNBKzg3Y3lkUC9GSUFJQUlEUHp0N0hMbjhNVUFRQXdIOTY3R0szdndkQUJBQkF2ejNzK2hjQmlRQUFrdlhjd2U1L0U2QUlBQ0JSNy8zckhnREwwdjhpQU1DWlJ0aTlJUUpnV2NhNEdBQnd0RkgyYnBnQVdKWnhMZ29BSEdHa25Sc3FBSlpscklzREFLMk10bTlEdlpocnI2K3ZmM3EvQmdEWVk3VGh2eGp1Qk9DOVVTOGFBS3d4OG80TkhRRExNdmJGQTRCN1J0K3ZvVi9jTlk4RUFCamQ2TU4vTWZ3SndIdXpYRlFBTXMyMFUxTUZ3TExNZFhFQnlESGJQazMxWXE5NUpBQkFiN01OLzhWMEp3RHZ6WHJSQWFoaDVoMmE5b1ZmY3hvQXdGbG1IdjZMNmQvQU5TRUF3RkVxRFA5Rm1UZHlUUWdBMEVxbDRiK1krbmNBSHFuNEx3dUE4MVhkazVKdjZwclRBQUMycWpyOEY2WGYzQzFpQUlCN3FvLytlekZ2OUpvUUFPQWlhZmd2NHQ3d05TRUFrQ3R4K0M5aTMvZ3RZZ0NndnVUUmY4OUZ1RUVJQU5SaitEOXlNVllRQkFEek1maVB1VGdiaVFHQWNSbjk5VnlvblFRQlFEOEcvM2t1M0FGRUFVQjd4cjZ0L3dHeVkvZkF5QWFvSXdBQUFBQkpSVTVFcmtKZ2dnPT0iLCAic2l6ZXMiOiAiNTEyeDUxMiIsICJ0eXBlIjogImltYWdlL3BuZyIsICJwdXJwb3NlIjogImFueSBtYXNrYWJsZSJ9XX0=">
 <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAAERklEQVR4nO3dMVLbUBSG0WsmPb2XR53lULM89VlBUmQg4NhYsp4sv/efU6VgjI3up/tsZsihdnY8Hn/v/RzY1zRNh72+992/sYHnmnsGcZdvZOi51dYxbPrgBp9Wtgphkwc1+GyldQhNH8zgcy+tQmjyIAafvawN4WntEzD87Gnt/K0KwPDzCNbM4U3rw+DzqJYeiRZvAMPPI1s6n4sCMPz0YMmczg7A8NOTufM6KwDDT4/mzO3qj0GhZ1cDcPenZ9fm99sADD8j+G6OLwZg+BnJpXn2HoBoZwNw92dE5+baBiDafwG4+zOy0/m2AYj2JQB3fxJ8nnMbgGgfAbj7k+R93m0AogmAaIcqxx9y2QBEEwDRBEC0J+d/ktkARPux9xNo6e3nr49/v7w+b/o1I/j8Ok+9vD7X289fQ7/+qoE2wOnFPHdxW33NCK69rlFf96lhAmC+JcM9eggCIJoAiCYArhr5GCQAogmAWUbdAgIgmgCIJgBmG/EYJACiCYBoAmCR0Y5BAiCaAFhspC0gAKIJgGgC4CajHIMEQDQBEE0A3GyEY5AAiCYAogmAVXo/BgmAaAJgtZ63gACIJgCiCYAmej0GCYBoAiCaAGimx2OQAIgmAJrqbQsIgGgCIJoAaK6nY5AAiCYAmuvpv1YVAE31NPxVAqCh3oa/SgA00uPwVwmABnod/ioBsFLPw18lAFboffirqn7s/QS2NOcXMj390uaRjDD8VTYANxhl+KsEwEIjDX+VAFhgtOGvEgAzjTj8VQJghlGHv2qgALa6SCNf/DlGf/3DBFDV/mKNfvEZLABYSgBEEwDRBEA0ARBNAEQTANEEQDQBEE0ARBMA0QRANAEQTQBEEwDRBEA0ARBNAEQTANEEQDQBEE0ARBsugFZ/ysSfRMkwXABV64fX8OcY9v8HeB/iJX//3+DnGXIDwFwCIJoAiCYAogmAaAIgmgCIJgCiCYBoAiCaAIgmAKIJgGgCIJoAiCYAogmAaAIgmgCIJgCiCYBoAiCaAIgmAKIJgGgCIJoAiCYAogmAaAIgmgCIJgCiCYBoAiCaAIgmAKIJgGgCIJoAiCYAogmAaAIg2vABvLw+N/26EfiZ/DN8AFXXL2TChT7lZ/JXRABVly9oyoU+x8+k6nA8Hn/v/SRgLzEbAM4RANGepmk67P0kYC82ANEEQDQBEO2pqsr7ABJN03SwAYgmAKJ9BOAYRJL3ebcBiPYlAFuABJ/n3AYg2n8B2AKM7HS+bQCinQ3AFmBE5+baBiDaxQBsAUZyaZ6/3QAiYATfzfHVI5AI6Nm1+fUegGizArAF6NGcuZ29AURAT+bO66IjkAjowZI5XfweQAQ8sqXzuWqY/VU5HsWtN+ZVnwLZBjyCNXO4+mNQEbCntfPXdHgdibiXVjfeTe7eQmArrU8cmx5fhEArWx2173J+FwK32vo95t3fwIqBa+75wcofHeMUuNj7SUoAAAAASUVORK5CYII=">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -15,28 +15,28 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
-  --bg:#f8f8f6;
+  --bg:#f4f6f9;
   --card:#ffffff;
-  --card2:#f2f2f0;
-  --b:#e0e0dc;
-  --b2:#d0d0cc;
-  --a:#b8860b;
-  --a2:#8b6508;
-  --t:#1a1a1a;
-  --t2:#444440;
-  --d:#888880;
-  --r:#c0392b;
-  --g:#27ae60;
-  --myo:#c0392b;
-  --sel:#fffbf0;
-  --sel-b:#c8a020;
+  --card2:#eef1f5;
+  --b:#d8dee8;
+  --b2:#c5ced9;
+  --a:#1d4ed8;
+  --a2:#1e3a8a;
+  --t:#0f172a;
+  --t2:#334155;
+  --d:#64748b;
+  --r:#dc2626;
+  --g:#16a34a;
+  --myo:#1d4ed8;
+  --sel:#eff6ff;
+  --sel-b:#3b82f6;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--t);font-family:'DM Mono',monospace;min-height:100vh;font-size:16px}
 
 /* HEADER */
 header{background:#fff;border-bottom:2px solid var(--t);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 0 var(--b)}
-.logo-myo{font-family:'Noto Serif JP',serif;font-size:2rem;font-weight:600;color:var(--myo);line-height:1;letter-spacing:.02em}
+.logo-myo{font-family:'Noto Serif JP',serif;font-size:1.55rem;font-weight:600;color:var(--myo);line-height:1;letter-spacing:.02em}
 .logo-sub{font-size:.58rem;color:var(--d);letter-spacing:.2em;text-transform:uppercase;margin-top:2px}
 .hd{text-align:right}
 .hd strong{color:var(--a2);display:block;font-size:.73rem;font-weight:500}
@@ -57,9 +57,10 @@ main{padding:14px;max-width:960px;margin:0 auto}
 .prov-send-estado{font-size:.65rem;padding:4px 10px;border-radius:6px;font-weight:500}
 .prov-send-estado.pendiente{background:#f0f0ee;color:var(--d)}
 .prov-send-estado.enviado{background:#e8f5e9;color:#27ae60}
-.prov-send-estado.actual{background:#fff8e1;color:#b8860b;border:1px solid #c8a020}
+.prov-send-estado.actual{background:#fff8e1;color:var(--a);border:1px solid #c8a020}
 .unidad-btn{padding:8px 14px;border:1.5px solid var(--b2);background:#fff;color:var(--t);font-family:'DM Mono',monospace;font-size:.72rem;cursor:pointer;border-radius:8px;transition:all .15s}
 .unidad-btn.sel{background:var(--t);color:#fff;border-color:var(--t)}
+.unidad-grid{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px}
 .add-prod-btn{width:100%;padding:11px;border:1.5px dashed var(--b2);background:transparent;color:var(--d);font-family:'DM Mono',monospace;font-size:.72rem;cursor:pointer;border-radius:12px;margin-top:4px;letter-spacing:.08em;transition:all .15s}
 .add-prod-btn:active{border-color:var(--a);color:var(--a2)}
 .search-bar{position:sticky;top:97px;z-index:90;background:var(--bg);padding:8px 14px 4px;border-bottom:1px solid var(--b)}
@@ -156,17 +157,17 @@ main{padding:14px;max-width:960px;margin:0 auto}
 .unit-btn:active{background:var(--a);border-color:var(--a);color:#fff}
 #splash{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;transition:opacity .7s ease}
 #splash.hide{opacity:0;pointer-events:none}
-.splash-logo{font-family:'Noto Serif JP',serif;font-size:3rem;font-weight:600;color:#b8860b;letter-spacing:.06em;opacity:0;transform:translateY(18px);animation:fadeup .8s ease .2s forwards}
+.splash-logo{font-family:'Noto Serif JP',serif;font-size:3rem;font-weight:600;color:var(--a);letter-spacing:.06em;opacity:0;transform:translateY(18px);animation:fadeup .8s ease .2s forwards}
 .splash-sub{font-family:'DM Mono',monospace;font-size:.65rem;color:#aaa;letter-spacing:.25em;text-transform:uppercase;opacity:0;animation:fadeup .8s ease .5s forwards}
-.splash-dot{width:5px;height:5px;border-radius:50%;background:#b8860b;margin-top:8px;opacity:0;animation:pulse 1s ease .8s infinite}
+.splash-dot{width:5px;height:5px;border-radius:50%;background:var(--a);margin-top:8px;opacity:0;animation:pulse 1s ease .8s infinite}
 .splash-icon{margin:4px 0;opacity:0;animation:fadeup .8s ease .4s forwards}
-.splash-myo{position:absolute;bottom:48px;font-family:'Noto Serif JP',serif;font-size:1.2rem;color:#e03030;letter-spacing:.1em;opacity:0;animation:fadeup .8s ease .7s forwards}
+.splash-myo{position:absolute;bottom:48px;font-family:'Noto Serif JP',serif;font-size:1.2rem;color:var(--a);letter-spacing:.1em;opacity:0;animation:fadeup .8s ease .7s forwards}
 @keyframes fadeup{to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:.15}50%{opacity:1}}
 /* ─── LOGIN ────────────────────────────────────────────────────────────── */
 #login-screen{position:fixed;inset:0;background:var(--bg);z-index:600;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px}
 #login-screen.on{display:flex}
-.login-logo{font-family:'Noto Serif JP',serif;font-size:2rem;color:#b8860b;margin-bottom:6px}
+.login-logo{font-family:'Noto Serif JP',serif;font-size:2rem;color:var(--a);margin-bottom:6px}
 .login-sub{font-size:.62rem;color:var(--d);letter-spacing:.2em;text-transform:uppercase;margin-bottom:32px}
 .login-form{width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px}
 .login-inp{width:100%;background:#fff;border:1.5px solid var(--b2);color:var(--t);font-family:'DM Mono',monospace;font-size:.88rem;padding:13px 16px;outline:none;border-radius:12px}
@@ -216,32 +217,31 @@ main{padding:14px;max-width:960px;margin:0 auto}
     <svg width="56" height="56" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
       <!-- Tenedor izquierda, inclinado -->
       <g transform="rotate(-25, 19, 19)">
-        <rect x="10" y="4" width="2" height="18" rx="1" fill="#b8860b"/>
-        <rect x="7" y="4" width="1.2" height="8" rx="0.6" fill="#b8860b"/>
-        <rect x="13" y="4" width="1.2" height="8" rx="0.6" fill="#b8860b"/>
-        <rect x="10" y="22" width="2" height="10" rx="1" fill="#b8860b"/>
+        <rect x="10" y="4" width="2" height="18" rx="1" fill="#1d4ed8"/>
+        <rect x="7" y="4" width="1.2" height="8" rx="0.6" fill="#1d4ed8"/>
+        <rect x="13" y="4" width="1.2" height="8" rx="0.6" fill="#1d4ed8"/>
+        <rect x="10" y="22" width="2" height="10" rx="1" fill="#1d4ed8"/>
       </g>
       <!-- Cuchillo derecha, inclinado -->
       <g transform="rotate(25, 19, 19)">
-        <rect x="26" y="4" width="2" height="28" rx="1" fill="#b8860b"/>
-        <path d="M28 4 Q32 8 28 16" fill="#b8860b"/>
+        <rect x="26" y="4" width="2" height="28" rx="1" fill="#1d4ed8"/>
+        <path d="M28 4 Q32 8 28 16" fill="#1d4ed8"/>
       </g>
     </svg>
   </div>
   <div class="splash-sub">Gestión de pedidos</div>
   <div class="splash-dot"></div>
-  <div class="splash-myo">MYO HANDROLL BAR</div>
-</div>
+  </div>
 <header>
-  <div><div class="logo-myo">MYO</div><div class="logo-sub">Gestión de Pedidos</div></div>
+  <div><div class="logo-myo">PedidosChef</div><div class="logo-sub">Gestión de Pedidos</div></div>
   <div style="display:flex;align-items:center;gap:10px">
     <div class="hd"><strong id="td">—</strong><span>Entrega solicitada</span></div>
     <button class="menu-btn" onclick="toggleMenu()">⋮</button>
   </div>
 </header>
 <div class="local-bar">
-  <span class="local-name">MYO HANDROLL BAR</span>
-  <span class="local-addr">García de Paredes 63, Madrid</span>
+  <span class="local-name" id="local-nombre">Handroll Bar</span>
+  <span class="local-addr" id="local-dir">García de Paredes 63, Madrid</span>
 </div>
 <div class="search-bar">
   <div class="search-wrap">
@@ -339,6 +339,7 @@ main{padding:14px;max-width:960px;margin:0 auto}
 <!-- MENU DESPLEGABLE -->
 <div class="menu-panel" id="menu-panel">
   <button class="menu-item" onclick="abrirStock()">📦 Ver stock</button>
+  <button class="menu-item" onclick="abrirContactos();document.getElementById('menu-panel').classList.remove('on')">📱 Contactos proveedores</button>
   <button class="menu-item" onclick="abrirAlbaran();document.getElementById('menu-panel').classList.remove('on')">📷 Escanear albarán</button>
   <button class="menu-item" onclick="abrirRestaurar();document.getElementById('menu-panel').classList.remove('on')">↩️ Restaurar ocultos</button>
   <button class="menu-item danger" onclick="doLogout()">Cerrar sesión</button>
@@ -430,6 +431,18 @@ main{padding:14px;max-width:960px;margin:0 auto}
     <div class="acts" style="margin-top:8px;margin-bottom:0;gap:8px;flex-wrap:wrap">
       <button class="btn bs" onclick="cerrarRestaurar()">Cerrar</button>
       <button class="btn bp" id="btn-restaurar-todos" onclick="restaurarTodos()">Restaurar todos</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONTACTOS PROVEEDORES -->
+<div class="mo" id="mo-contactos">
+  <div class="mdl" style="max-height:85vh;display:flex;flex-direction:column">
+    <div class="mtt">Contactos proveedores</div>
+    <div class="msb">Cambia el número de WhatsApp si el comercial ha cambiado de teléfono. Solo dígitos con código de país (ej: 34612345678).</div>
+    <div id="contactos-lista" style="overflow-y:auto;flex:1;margin:8px 0"></div>
+    <div class="acts" style="margin-top:8px;margin-bottom:0">
+      <button class="btn bs" onclick="cerrarContactos()">Cerrar</button>
     </div>
   </div>
 </div>
@@ -855,9 +868,67 @@ let colaEnvio=[];let colaIdx=0;
 const UNIDADES_PRESET=['kg','l','ud','bote','bolsa','bandeja','pack','caja','garrafa','rollo','lata','bidon'];
 let nuevoProvId=null;let unidadSel=null;
 
-// ── CONTACTOS PARA COPIAS ─────────────────────────────────────────────────────
-const RESUMEN_WA = '34624342090'; // WhatsApp resumen pedidos
-const MARKEL_WA     = '34687537302';               // WhatsApp inventario solo
+// ── RESTAURANTE (solo aparece en mensajes de pedido) ──────────────────────────
+const RESTAURANTE = {
+  nombre: 'Handroll Bar',
+  direccion: 'García de Paredes 63, Madrid'
+};
+
+// Números de WhatsApp personalizados por proveedor (localStorage)
+function getWa(prov){
+  const custom = JSON.parse(localStorage.getItem('proveedores_wa')||'{}');
+  return custom[prov.id] || prov.wa || null;
+}
+function setWa(provId, numero){
+  const custom = JSON.parse(localStorage.getItem('proveedores_wa')||'{}');
+  const clean = (numero||'').replace(/\D/g,'');
+  if(clean) custom[provId] = clean;
+  else delete custom[provId];
+  localStorage.setItem('proveedores_wa', JSON.stringify(custom));
+}
+function editarWaProv(provId){
+  const prov = PROVEEDORES.find(p=>p.id===provId);
+  if(!prov) return;
+  const actual = getWa(prov) || '';
+  const nuevo = prompt('Número de WhatsApp para '+prov.nombre+'\n(solo dígitos, con código de país, ej: 34612345678)\n\nDeja vacío para restaurar el número original.', actual);
+  if(nuevo === null) return;
+  setWa(provId, nuevo.trim());
+  if(document.getElementById('mo').classList.contains('on')) renderSendList();
+  if(document.getElementById('mo-contactos').classList.contains('on')) abrirContactos();
+  showT(nuevo.trim() ? '✓ Número actualizado' : '✓ Número restaurado al original');
+}
+function abrirContactos(){
+  const lista = document.getElementById('contactos-lista');
+  lista.innerHTML = '';
+  PROVEEDORES.forEach(prov=>{
+    if(prov.email && !prov.wa){
+      const row = document.createElement('div');
+      row.style.cssText='padding:12px 0;border-bottom:1px solid var(--b)';
+      row.innerHTML=`<div style="font-size:.82rem;font-weight:500">${prov.nombre}</div>
+        <div style="font-size:.68rem;color:var(--d);margin-top:2px">Email: ${prov.email}</div>`;
+      lista.appendChild(row);
+      return;
+    }
+    const actual = getWa(prov) || '';
+    const esCustom = !!(JSON.parse(localStorage.getItem('proveedores_wa')||'{}')[prov.id]);
+    const row = document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--b);gap:8px';
+    row.innerHTML=`<div style="flex:1;min-width:0">
+        <div style="font-size:.82rem;font-weight:500;color:var(--t)">${prov.nombre}</div>
+        <div style="font-size:.68rem;color:${esCustom?'var(--a)':'var(--d)'};margin-top:2px">${actual ? '+'+actual : 'Sin número'}${esCustom?' · personalizado':''}</div>
+      </div>
+      <button onclick="editarWaProv('${prov.id}')" style="background:var(--t);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:.68rem;cursor:pointer;font-family:'DM Mono',monospace;white-space:nowrap">Editar</button>`;
+    lista.appendChild(row);
+  });
+  document.getElementById('mo-contactos').classList.add('on');
+  document.body.style.overflow='hidden';
+  document.getElementById('float-bar').style.display='none';
+}
+function cerrarContactos(){
+  document.getElementById('mo-contactos').classList.remove('on');
+  document.body.style.overflow='';
+  document.getElementById('float-bar').style.display='';
+}
 
 // ── 3. SUPABASE ──────────────────────────────────────────────────────────────
 const SUPA_URL = 'https://xgxziltsbvhywhmlhxna.supabase.co';
@@ -966,7 +1037,7 @@ function calcEntregaProv(prov){
     }
   }
 
-  // Resto de proveedores — lógica general MYO
+  // Resto de proveedores — lógica general
   // Sábado 00:00-00:30 → entrega sábado mismo
   if(dia === 6 && hora < 0.5) return ahora;
   // Dom, lun, o sábado tarde → martes
@@ -1501,12 +1572,17 @@ function renderSendList(){
     const estado=prov.enviado?'enviado':i===colaIdx?'actual':'pendiente';
     const label=prov.enviado?'✓ Enviado':i===colaIdx?'► Siguiente':'Pendiente';
     const d=document.createElement('div');d.className='prov-send-item';
+    const waNum = getWa(prov) || (prov.email ? 'email' : 'sin número');
+    const waDisplay = waNum === 'email' ? 'Email' : (waNum === 'sin número' ? 'Sin número' : '+'+waNum);
     d.innerHTML=`
-      <div class="prov-send-info">
+      <div class="prov-send-info" style="flex:1">
         <div class="prov-send-name">${prov.nombre}</div>
-        <div class="prov-send-cnt">${cnt} producto${cnt>1?'s':''}</div>
+        <div class="prov-send-cnt">${cnt} producto${cnt>1?'s':''} · ${waDisplay}</div>
       </div>
-      <div class="prov-send-estado ${estado}">${label}</div>`;
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        ${!prov.email ? `<button onclick="editarWaProv('${prov.id}')" style="background:none;border:1px solid var(--b2);border-radius:6px;padding:4px 8px;font-size:.6rem;cursor:pointer;color:var(--d);font-family:'DM Mono',monospace">📱</button>` : ''}
+        <div class="prov-send-estado ${estado}">${label}</div>
+      </div>`;
     list.appendChild(d);
   });
 
@@ -1529,35 +1605,7 @@ function renderSendList(){
     btn.disabled=true;btn.style.opacity='.5';
     localStorage.removeItem('pedido_q');
 
-    // Preparar resumen WhatsApp
-    const fecha = fechaEntregaSeleccionada || new Date();
-    let resumen = `_Myo Handroll Bar — Resumen de pedidos_\n_Entrega: ${fmtS(fecha)}_\n\n`;
-    colaEnvio.forEach(prov=>{
-      const its = prov.productos.filter(p=>(Q[p.id]||0)>0);
-      if(!its.length) return;
-      resumen += `*── ${prov.nombre} ──*\n`;
-      its.forEach(p=>{
-        const u=p.u.trim().toLowerCase();
-        resumen+=`• ${p.n} · ${Q[p.id]} ${u==='kg'?'kg':u==='l'?'l':'ud'}\n`;
-      });
-      resumen+='\n';
-    });
-    resumen+=`_Entrega después de las 10:30h_`;
-    const waUrl = `https://wa.me/${RESUMEN_WA}?text=${encodeURIComponent(resumen)}`;
-
-    // Botón generar PDF resumen
-    if(!document.getElementById('btn-resumen-wa')){
-      const btnPDF = document.createElement('button');
-      btnPDF.id = 'btn-resumen-wa';
-      btnPDF.className = 'btn bp';
-      btnPDF.style.marginTop = '10px';
-      btnPDF.style.background = '#25D366';
-      btnPDF.textContent = '📄 Ver resumen y enviar';
-      btnPDF.onclick = ()=>{ generarResumenPDF(resumen, fecha); };
-      btn.parentElement.appendChild(btnPDF);
-    }
-
-    // Botón cerrar
+    // Solo botón cerrar — sin enviar resumen a ningún número
     if(!document.getElementById('btn-cerrar-envio')){
       const btnCerrar = document.createElement('button');
       btnCerrar.id = 'btn-cerrar-envio';
@@ -1587,18 +1635,20 @@ async function enviarSiguiente(){
   renderSendList();
 
   if(prov.email){
-    const asunto=`Pedido MYO Handroll Bar · Entrega ${fmtS(fecha)}`;
-    let cuerpo=`MYO Handroll Bar\nCalle García de Paredes 63, Madrid\nPedido ${prov.nombre} · Entrega ${fmtS(fecha)}\n\n`;
+    const asunto=`Pedido ${RESTAURANTE.nombre} · Entrega ${fmtS(fecha)}`;
+    let cuerpo=`${RESTAURANTE.nombre}\n${RESTAURANTE.direccion}\nPedido ${prov.nombre} · Entrega ${fmtS(fecha)}\n\n`;
     its.forEach(p=>{const u=p.u.trim().toLowerCase();cuerpo+=`${p.n} (${p.u}) · ${Q[p.id]} ${u==='kg'?'kg':u==='l'?'l':'ud'}\n`;});
     cuerpo+=`\nEntrega después de las 10:30h`;
     if(notas)cuerpo+=`\n${notas}`;
     window.open(`mailto:${prov.email}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`,'_blank');
   } else {
-    let m=`_Myo Handroll Bar_\n_Calle García de Paredes 63, Madrid_\n_Pedido ${prov.nombre} · Entrega ${fmtS(fecha)}_\n\n`;
+    const waNum = getWa(prov);
+    if(!waNum){ showT('⚠ Sin número de WhatsApp para '+prov.nombre); return; }
+    let m=`_${RESTAURANTE.nombre}_\n_${RESTAURANTE.direccion}_\n_Pedido ${prov.nombre} · Entrega ${fmtS(fecha)}_\n\n`;
     its.forEach(p=>{const u=p.u.trim().toLowerCase();m+=`_*${p.n.toLowerCase()} (${p.u}) · ${Q[p.id]} ${u==='kg'?'kg':u==='l'?'l':'ud'}*_\n`;});
     m+=`\n_Entrega después de las 10:30h_`;
     if(notas)m+=`\n_${notas}_`;
-    window.open(`https://wa.me/${prov.wa}?text=${encodeURIComponent(m)}`,'_blank');
+    window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(m)}`,'_blank');
   }
 
   guardarPedidoEnBD(prov, its).catch(err=>{
@@ -1768,7 +1818,7 @@ const PRODUCTOS_INVENTARIO = {
   'SERP_008': 'kg', // HAMACHI 2,2KG
   'SERP_011': 'kg', // SALMON 2,2 LOMOS
   // TOKYO YA — ud
-  'TOKY_026': 'ud', // YAKINORI PREMIUM 50HJ
+  'TOKY_001': 'ud', // Yakinori Premium 50 Hojas 200G
   // COMINPORT — ud
   'COMI_008': 'ud', // EBI FRY LANGOSTINO TORPEDO 40pzs
   'COMI_023': 'ud', // MOCHI CHOCOLATE
@@ -1887,7 +1937,7 @@ function renderStock(){
         <div class="stock-item-row">
           <div class="stock-item-info">
             <div class="stock-item-name">
-              <button onclick="togglePrioritario('${item.producto_id}')" style="background:none;border:none;cursor:pointer;font-size:.6rem;padding:0 5px 0 0;opacity:${esManual?'1':'0.25'};color:#b8860b;line-height:1">★</button>
+              <button onclick="togglePrioritario('${item.producto_id}')" style="background:none;border:none;cursor:pointer;font-size:.6rem;padding:0 5px 0 0;opacity:${esManual?'1':'0.25'};color:var(--a);line-height:1">★</button>
               ${item.producto_nombre}
             </div>
             <div class="stock-item-prov">${labelPedido}</div>
@@ -1903,7 +1953,7 @@ function renderStock(){
 
   html+=`<button class="stock-reset-btn" style="margin-top:8px;border-color:#27ae60;color:#27ae60" onclick="abrirAnadirStock()">➕ Añadir al stock manualmente</button>`;
   html+=`<button class="stock-reset-btn" onclick="resetStock()">Resetear stock semanal</button>`;
-  html+=`<button class="stock-reset-btn" style="margin-top:8px;border-color:#b8860b;color:#b8860b" onclick="exportarStockPDF()">📄 Exportar PDF</button>`;
+  html+=`<button class="stock-reset-btn" style="margin-top:8px;border-color:var(--a);color:var(--a)" onclick="exportarStockPDF()">📄 Exportar PDF</button>`;
   cont.innerHTML = html;
 }
 
@@ -1996,13 +2046,13 @@ function exportarStockPDF(){
     body{font-family:Arial,sans-serif;padding:32px;color:#1a1a1a;max-width:600px;margin:0 auto}
     h1{font-size:1.2rem;margin-bottom:4px}
     .sub{font-size:.72rem;color:#888;margin-bottom:24px}
-    h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.12em;color:#b8860b;border-bottom:1.5px solid #b8860b;padding-bottom:4px;margin-top:24px;margin-bottom:8px}
+    h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.12em;color:#1d4ed8;border-bottom:1.5px solid #1d4ed8;padding-bottom:4px;margin-top:24px;margin-bottom:8px}
     table{width:100%;border-collapse:collapse}
     td{font-size:.85rem;padding:9px 6px;border-bottom:1px solid #f0f0f0}
     td:last-child{text-align:right;font-weight:600;white-space:nowrap}
     .footer{margin-top:40px;font-size:.6rem;color:#aaa;text-align:center}
   </style></head><body>
-  <h1>⭐ Productos Clave — MYO Handroll Bar</h1>
+  <h1>⭐ Productos Clave — ${RESTAURANTE.nombre}</h1>
   <div class="sub">Semana del ${semana} · ${new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>`;
 
   for(const prov in grupos){
@@ -2014,30 +2064,13 @@ function exportarStockPDF(){
     html+=`</table>`;
   }
 
-  html+=`<div class="footer">PedidosChef · MYO Handroll Bar · García de Paredes 63, Madrid</div></body></html>`;
+  html+=`<div class="footer">PedidosChef · ${RESTAURANTE.nombre} · ${RESTAURANTE.direccion}</div></body></html>`;
 
   const win = window.open('','_blank');
   win.document.write(html);
   win.document.close();
   setTimeout(()=>win.print(),500);
-
-  // Construir resumen de texto para email y WhatsApp
-  let resumenTexto = `*INVENTARIO MYO Handroll Bar*\nSemana del ${semana}\n\n`;
-  for(const prov in grupos){
-    resumenTexto += `*${prov}*\n`;
-    grupos[prov].forEach(item=>{
-      const cantidad = item.cantidad_restante === '—' ? '—' : `${item.cantidad_restante} ${item.unidad}`;
-      resumenTexto += `• ${item.producto_nombre}: ${cantidad}\n`;
-    });
-    resumenTexto += '\n';
-  }
-
-  // WhatsApp a Markel
-  setTimeout(()=>{
-    window.open(`https://wa.me/${MARKEL_WA}?text=${encodeURIComponent(resumenTexto)}`,'_blank');
-  }, 800);
-
-  showT('📄 PDF generado · Enviando a Markel...');
+  showT('📄 PDF generado');
 }
 
 function togglePassVis(){
@@ -2047,10 +2080,7 @@ function togglePassVis(){
   else { inp.type='password'; btn.textContent='👁️'; }
 }
 
-function generarResumenPDF(resumenTexto, fecha){
-  const waUrl = `https://wa.me/${RESUMEN_WA}?text=${encodeURIComponent(resumenTexto)}`;
-  window.open(waUrl, '_blank');
-}
+
 
 // ── 15. UTILIDADES ───────────────────────────────────────────────────────────
 function showT(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),3000);}
@@ -2161,10 +2191,18 @@ Responde SOLO con JSON válido, sin texto adicional, sin comentarios:
 
     const data = await response.json();
     if(data.error) throw new Error(data.error);
-    const texto = data.text || '';
-    const clean = texto.replace(/```json|```/g,'').trim();
-    albaranDetectado = JSON.parse(clean);
-
+    const texto = data.text || data.result || data.content || '';
+    let clean = texto.replace(/```json|```/g,'').trim();
+    // Extraer JSON si viene rodeado de texto
+    const jsonMatch = clean.match(/\{[\s\S]*\}/);
+    if(jsonMatch) clean = jsonMatch[0];
+    try {
+      albaranDetectado = JSON.parse(clean);
+    } catch(parseErr) {
+      console.error('JSON parse fail:', clean);
+      throw new Error('No se pudo interpretar la respuesta de la IA');
+    }
+    if(!albaranDetectado.productos) albaranDetectado.productos = [];
     mostrarResultadoAlbaran(albaranDetectado);
 
   } catch(err) {
@@ -2186,45 +2224,47 @@ function mostrarResultadoAlbaran(datos){
 
   let html = `<div style="font-size:.7rem;color:var(--d);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Resultado del análisis</div>`;
 
-  // Proveedor detectado
-  const provColor = datos.proveedor_id ? 'var(--a2)' : 'var(--r)';
   html += `<div style="background:var(--bg);border-radius:10px;padding:10px 12px;margin-bottom:12px">
-    <div style="font-size:.65rem;color:var(--d)">Proveedor detectado</div>
-    <div style="font-size:.88rem;font-weight:500;color:${provColor}">${datos.proveedor || 'No detectado'}</div>
-    ${datos.fecha ? `<div style="font-size:.65rem;color:var(--d);margin-top:2px">Fecha: ${datos.fecha}</div>` : ''}
-    ${!datos.proveedor_id ? '<div style="font-size:.65rem;color:var(--r);margin-top:2px">⚠ No coincide con ningún proveedor registrado</div>' : ''}
-  </div>`;
+    <div style="font-size:.65rem;color:var(--d);margin-bottom:6px">Proveedor</div>
+    <select id="albaran-prov-select" style="width:100%;padding:10px 12px;border:1.5px solid var(--b2);border-radius:10px;font-family:'DM Mono',monospace;font-size:.82rem;background:#fff;color:var(--t);outline:none">
+      <option value="">— Seleccionar proveedor —</option>`;
+  PROVEEDORES.forEach(p=>{
+    const sel = (datos.proveedor_id === p.id) ? ' selected' : '';
+    html += `<option value="${p.id}"${sel}>${p.nombre}</option>`;
+  });
+  html += `</select>`;
+  if(datos.fecha) html += `<div style="font-size:.65rem;color:var(--d);margin-top:6px">Fecha detectada: ${datos.fecha}</div>`;
+  if(!datos.proveedor_id) html += `<div style="font-size:.65rem;color:var(--r);margin-top:4px">⚠ Selecciona el proveedor manualmente</div>`;
+  html += `</div>`;
 
-  // Resumen de variaciones de precio
   let subidas=0, bajadas=0;
 
   if(datos.productos && datos.productos.length){
     html += `<div style="font-size:.7rem;color:var(--d);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">Productos (${datos.productos.length})</div>`;
 
     datos.productos.forEach((p, i) => {
-      // Buscar precio actual del producto
       let precioActual = null;
       let esNuevo = true;
-      if(datos.proveedor_id){
-        const prov = PROVEEDORES.find(pr=>pr.id===datos.proveedor_id);
+      const provId = datos.proveedor_id;
+      if(provId){
+        const prov = PROVEEDORES.find(pr=>pr.id===provId);
         if(prov){
-          const nombreLower = p.nombre.toLowerCase().trim();
+          const nombreLower = (p.nombre||'').toLowerCase().trim();
           const existente = prov.productos.find(prod => {
             const prodLower = prod.n.toLowerCase().trim();
-            const minLen = Math.min(6, nombreLower.length, prodLower.length);
+            if(!nombreLower || !prodLower) return false;
+            if(prodLower === nombreLower) return true;
+            const minLen = Math.min(8, nombreLower.length, prodLower.length);
             return prodLower.includes(nombreLower.substring(0, minLen)) ||
                    nombreLower.includes(prodLower.substring(0, minLen));
           });
-          if(existente && existente.p > 0){
-            precioActual = existente.p;
+          if(existente){
             esNuevo = false;
-          } else if(existente){
-            esNuevo = false;
+            if(existente.p > 0) precioActual = existente.p;
           }
         }
       }
 
-      // Calcular variación de precio
       let precioHtml = '';
       if(p.precio_unitario && precioActual){
         const diff = p.precio_unitario - precioActual;
@@ -2232,30 +2272,30 @@ function mostrarResultadoAlbaran(datos){
         if(Math.abs(diff) > 0.01){
           if(diff > 0){
             subidas++;
-            precioHtml = `<div style="font-size:.7rem;color:#c0392b;font-weight:600;margin-top:3px">
+            precioHtml = `<div style="font-size:.7rem;color:#dc2626;font-weight:600;margin-top:3px">
               📈 ${precioActual.toFixed(2)}€ → ${p.precio_unitario.toFixed(2)}€ <span style="background:#fde8e8;padding:1px 5px;border-radius:4px">+${pct}%</span>
             </div>`;
           } else {
             bajadas++;
-            precioHtml = `<div style="font-size:.7rem;color:#27ae60;font-weight:600;margin-top:3px">
+            precioHtml = `<div style="font-size:.7rem;color:#16a34a;font-weight:600;margin-top:3px">
               📉 ${precioActual.toFixed(2)}€ → ${p.precio_unitario.toFixed(2)}€ <span style="background:#e8f5e9;padding:1px 5px;border-radius:4px">${pct}%</span>
             </div>`;
           }
         } else {
-          precioHtml = `<div style="font-size:.65rem;color:var(--d);margin-top:2px">${p.precio_unitario.toFixed(2)} €/ud · sin cambio</div>`;
+          precioHtml = `<div style="font-size:.65rem;color:var(--d);margin-top:2px">${p.precio_unitario.toFixed(2)} € · sin cambio</div>`;
         }
       } else if(p.precio_unitario){
-        precioHtml = `<div style="font-size:.65rem;color:var(--d);margin-top:2px">${p.precio_unitario.toFixed(2)} €/ud</div>`;
+        precioHtml = `<div style="font-size:.65rem;color:var(--d);margin-top:2px">${Number(p.precio_unitario).toFixed(2)} €</div>`;
       }
 
       const badge = esNuevo
-        ? '<span style="background:#e8f5e9;color:#27ae60;font-size:.55rem;padding:2px 6px;border-radius:4px;margin-left:6px">NUEVO</span>'
+        ? '<span style="background:#e8f5e9;color:#16a34a;font-size:.55rem;padding:2px 6px;border-radius:4px;margin-left:6px">NUEVO</span>'
         : '';
 
       html += `<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--b);gap:8px">
         <div style="flex:1">
-          <div style="font-size:.8rem;color:var(--t)">${p.nombre}${badge}</div>
-          <div style="font-size:.62rem;color:var(--d);margin-top:2px">${p.cantidad} ${p.unidad}</div>
+          <div style="font-size:.8rem;color:var(--t)">${p.nombre||'Producto'}${badge}</div>
+          <div style="font-size:.62rem;color:var(--d);margin-top:2px">${p.cantidad||1} ${p.unidad||'ud'}</div>
           ${precioHtml}
         </div>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding-top:2px">
@@ -2264,72 +2304,76 @@ function mostrarResultadoAlbaran(datos){
       </div>`;
     });
 
-    // Resumen de variaciones
     if(subidas > 0 || bajadas > 0){
       html += `<div style="background:var(--bg);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:.72rem">`;
-      if(subidas > 0) html += `<div style="color:#c0392b">📈 ${subidas} producto${subidas>1?'s':''} han subido de precio</div>`;
-      if(bajadas > 0) html += `<div style="color:#27ae60;margin-top:4px">📉 ${bajadas} producto${bajadas>1?'s':''} han bajado de precio</div>`;
+      if(subidas > 0) html += `<div style="color:#dc2626">📈 ${subidas} producto${subidas>1?'s':''} han subido de precio</div>`;
+      if(bajadas > 0) html += `<div style="color:#16a34a;margin-top:4px">📉 ${bajadas} producto${bajadas>1?'s':''} han bajado de precio</div>`;
       html += `</div>`;
     }
   } else {
-    html += '<div style="color:var(--d);font-size:.78rem;padding:8px 0">No se detectaron productos. Intenta con mejor iluminación.</div>';
+    html += '<div style="color:var(--d);font-size:.78rem;padding:8px 0">No se detectaron productos. Intenta con mejor iluminación o otra foto.</div>';
   }
 
   cont.innerHTML = html;
 
-  if(datos.productos && datos.productos.length && datos.proveedor_id){
+  if(datos.productos && datos.productos.length){
     document.getElementById('btn-confirmar-albaran').style.display='block';
   }
 }
 
 function confirmarAlbaran(){
-  if(!albaranDetectado || !albaranDetectado.proveedor_id) return;
-  const prov = PROVEEDORES.find(p=>p.id===albaranDetectado.proveedor_id);
+  if(!albaranDetectado) return;
+
+  const select = document.getElementById('albaran-prov-select');
+  const provId = select ? select.value : (albaranDetectado.proveedor_id || '');
+  if(!provId){
+    showT('⚠ Selecciona un proveedor');
+    return;
+  }
+  const prov = PROVEEDORES.find(p=>p.id===provId);
   if(!prov){ showT('Proveedor no encontrado'); return; }
 
   let añadidos = 0;
   let actualizados = 0;
 
-  albaranDetectado.productos.forEach((p, i) => {
+  (albaranDetectado.productos||[]).forEach((p, i) => {
     const checkbox = document.getElementById(`albaran-check-${i}`);
     if(!checkbox || !checkbox.checked) return;
 
-    // Buscar producto existente con coincidencia más robusta
-    const nombreLower = p.nombre.toLowerCase().trim();
+    const nombreLower = (p.nombre||'').toLowerCase().trim();
     const existente = prov.productos.find(prod => {
       const prodLower = prod.n.toLowerCase().trim();
-      // Coincidencia exacta o parcial significativa (mínimo 6 chars)
-      const minLen = Math.min(6, nombreLower.length, prodLower.length);
+      if(!nombreLower || !prodLower) return false;
+      if(prodLower === nombreLower) return true;
+      const minLen = Math.min(8, nombreLower.length, prodLower.length);
       return prodLower.includes(nombreLower.substring(0, minLen)) ||
              nombreLower.includes(prodLower.substring(0, minLen));
     });
 
     if(existente){
-      // Actualizar precio siempre que se detecte uno válido
       if(p.precio_unitario && p.precio_unitario > 0){
-        existente.p = p.precio_unitario;
+        existente.p = Number(p.precio_unitario);
         existente.nota = ['kg','l'].includes(existente.u) ? '/'+existente.u : '';
         actualizados++;
       }
-    } else {
-      // Añadir producto nuevo
+    } else if(p.nombre){
       const newId = prov.id.toUpperCase().slice(0,4)+'_C'+Date.now().toString().slice(-4)+i;
+      const unidad = p.unidad || 'ud';
       prov.productos.push({
         id: newId,
         n: p.nombre,
-        u: p.unidad || 'ud',
-        p: p.precio_unitario || 0,
-        nota: p.precio_unitario>0 && ['kg','l'].includes(p.unidad||'') ? '/'+(p.unidad||'') : ''
+        u: unidad,
+        p: p.precio_unitario ? Number(p.precio_unitario) : 0,
+        nota: (p.precio_unitario>0 && ['kg','l'].includes(unidad)) ? '/'+unidad : ''
       });
       prov.productos.sort((a,b)=>a.n.toLowerCase().localeCompare(b.n.toLowerCase()));
       añadidos++;
     }
   });
 
-  // Guardar todo — tanto productos custom como precios actualizados
   saveProductosCustom();
   saveUnidades();
-  // Guardar precios actualizados en localStorage para que persistan
+  saveEdicionesProductos();
   const preciosGuardados = JSON.parse(localStorage.getItem('precios_custom')||'{}');
   prov.productos.forEach(p => { preciosGuardados[p.id] = p.p; });
   localStorage.setItem('precios_custom', JSON.stringify(preciosGuardados));
@@ -2344,6 +2388,7 @@ function confirmarAlbaran(){
   showT('✓ ' + (msg.length ? msg.join(' · ') : 'Sin cambios'));
 }
 
+
 // ── 16. ARRANQUE ─────────────────────────────────────────────────────────────
 cargarUnidades();
 cargarEdicionesProductos();
@@ -2354,6 +2399,13 @@ cargarProductosCustom();
   PROVEEDORES.forEach(prov=>prov.productos.forEach(p=>{
     if(precios[p.id] !== undefined) p.p = precios[p.id];
   }));
+})();
+// Aplicar datos del restaurante en la UI
+(function(){
+  const ln=document.getElementById('local-nombre');
+  const ld=document.getElementById('local-dir');
+  if(ln) ln.textContent = RESTAURANTE.nombre;
+  if(ld) ld.textContent = RESTAURANTE.direccion;
 })();
 render();upd();
 
