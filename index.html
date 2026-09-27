@@ -13,6 +13,7 @@
 <meta name="apple-mobile-web-app-title" content="PedidosChef">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root{
   --bg:#f4f6f9;
@@ -209,6 +210,12 @@ main{padding:14px;max-width:960px;margin:0 auto}
 .stock-reset-btn{width:100%;padding:13px;background:transparent;border:1.5px solid var(--b2);color:var(--d);font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;border-radius:12px;cursor:pointer;margin-top:16px}
 .stock-empty{text-align:center;padding:40px;color:var(--d);font-size:.75rem}
 .stock-seccion{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--t);padding:10px 2px 4px;margin-top:8px;border-bottom:1.5px solid var(--t)}
+#install-bar{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--t);color:#fff;padding:12px 16px;z-index:600;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 -4px 16px rgba(0,0,0,.2)}
+#install-bar.on{display:flex}
+#install-bar span{font-size:.75rem;flex:1;line-height:1.35}
+#install-bar button{font-family:'DM Mono',monospace;font-size:.68rem;padding:8px 14px;border-radius:8px;border:none;cursor:pointer}
+#install-bar .ib-yes{background:var(--a);color:#fff}
+#install-bar .ib-no{background:transparent;color:#aaa;border:1px solid #555}
 </style>
 <body>
 <div id="splash">
@@ -311,6 +318,11 @@ main{padding:14px;max-width:960px;margin:0 auto}
   <button class="float-bar-close" id="btn-cerrar-prov">✕ Cerrar</button>
 </div>
 <div class="toast" id="toast"></div>
+<div id="install-bar">
+  <span>Instala PedidosChef en tu móvil para usarla como app</span>
+  <button class="ib-no" onclick="cerrarInstallBar()">Ahora no</button>
+  <button class="ib-yes" onclick="instalarApp()">Instalar</button>
+</div>
 
 <!-- LOGIN -->
 <div id="login-screen">
@@ -342,6 +354,8 @@ main{padding:14px;max-width:960px;margin:0 auto}
   <button class="menu-item" onclick="abrirContactos();document.getElementById('menu-panel').classList.remove('on')">📱 Contactos proveedores</button>
   <button class="menu-item" onclick="abrirAlbaran();document.getElementById('menu-panel').classList.remove('on')">📷 Escanear albarán</button>
   <button class="menu-item" onclick="abrirRestaurar();document.getElementById('menu-panel').classList.remove('on')">↩️ Restaurar ocultos</button>
+  <button class="menu-item" onclick="pedirNotificaciones();document.getElementById('menu-panel').classList.remove('on')">🔔 Activar notificaciones</button>
+  <button class="menu-item" onclick="instalarApp();document.getElementById('menu-panel').classList.remove('on')">⬇️ Instalar app</button>
   <button class="menu-item danger" onclick="doLogout()">Cerrar sesión</button>
 </div>
 
@@ -369,7 +383,7 @@ main{padding:14px;max-width:960px;margin:0 auto}
 <div class="mo" id="mo-albaran">
   <div class="mdl" style="max-height:88vh;display:flex;flex-direction:column">
     <div class="mtt">📷 Escanear albarán</div>
-    <div class="msb">Haz una foto al albarán. La IA detectará el proveedor, productos y precios automáticamente.</div>
+    <div class="msb">Haz una foto al albarán (o a una nota con productos y precios). Se leerá el texto, se detectará el proveedor y se compararán los precios.</div>
 
     <div id="albaran-upload-area" style="border:2px dashed var(--b2);border-radius:12px;padding:32px 24px;text-align:center;cursor:pointer;margin-bottom:12px" onclick="document.getElementById('albaran-input').click()">
       <div style="font-size:2.5rem;margin-bottom:10px">📷</div>
@@ -383,8 +397,8 @@ main{padding:14px;max-width:960px;margin:0 auto}
     </div>
 
     <div id="albaran-loading" style="display:none;text-align:center;padding:20px;color:var(--d);font-size:.78rem">
-      <div style="margin-bottom:8px">🔍 Analizando albarán...</div>
-      <div style="font-size:.65rem">La IA está leyendo los productos y precios</div>
+      <div style="margin-bottom:8px">🔍 Leyendo albarán...</div>
+      <div style="font-size:.65rem" id="ocr-status">Preparando imagen</div>
     </div>
 
     <div id="albaran-resultado" style="display:none;overflow-y:auto;flex:1"></div>
@@ -1604,6 +1618,8 @@ function renderSendList(){
     btn.textContent='✓ Todos enviados';
     btn.disabled=true;btn.style.opacity='.5';
     localStorage.removeItem('pedido_q');
+    notificar('Pedidos enviados', 'Todos los pedidos de '+RESTAURANTE.nombre+' se han preparado.');
+    try{ if(navigator.vibrate) navigator.vibrate([30,50,30]); }catch(e){}
 
     // Solo botón cerrar — sin enviar resumen a ningún número
     if(!document.getElementById('btn-cerrar-envio')){
@@ -1648,7 +1664,14 @@ async function enviarSiguiente(){
     its.forEach(p=>{const u=p.u.trim().toLowerCase();m+=`_*${p.n.toLowerCase()} (${p.u}) · ${Q[p.id]} ${u==='kg'?'kg':u==='l'?'l':'ud'}*_\n`;});
     m+=`\n_Entrega después de las 10:30h_`;
     if(notas)m+=`\n_${notas}_`;
-    window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(m)}`,'_blank');
+    // Preferir compartir nativo; si no, abrir WhatsApp
+    (async ()=>{
+      const compartido = await compartirTexto(m, 'Pedido '+prov.nombre);
+      if(!compartido){
+        window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(m)}`,'_blank');
+      }
+      try{ if(navigator.vibrate) navigator.vibrate(30); }catch(e){}
+    })();
   }
 
   guardarPedidoEnBD(prov, its).catch(err=>{
@@ -2083,7 +2106,103 @@ function togglePassVis(){
 
 
 // ── 15. UTILIDADES ───────────────────────────────────────────────────────────
-function showT(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),3000);}
+function showT(m){
+  const t=document.getElementById('toast');
+  t.textContent=m;
+  t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),3000);
+  // Vibración suave en móvil
+  try{ if(navigator.vibrate) navigator.vibrate(m.startsWith('⚠') ? [40,40,40] : 25); }catch(e){}
+}
+
+// ── APIs MÓVILES ─────────────────────────────────────────────────────────────
+let deferredInstallPrompt = null;
+let wakeLockSentinel = null;
+
+window.addEventListener('beforeinstallprompt', (e)=>{
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const bar = document.getElementById('install-bar');
+  if(bar && !window.matchMedia('(display-mode: standalone)').matches){
+    bar.classList.add('on');
+  }
+});
+
+async function instalarApp(){
+  if(!deferredInstallPrompt){
+    showT('Usa el menú del navegador → Añadir a pantalla de inicio');
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  const { outcome } = await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  document.getElementById('install-bar')?.classList.remove('on');
+  if(outcome === 'accepted') showT('✓ App instalada');
+}
+
+function cerrarInstallBar(){
+  document.getElementById('install-bar')?.classList.remove('on');
+}
+
+async function pedirNotificaciones(){
+  if(!('Notification' in window)){ showT('Este dispositivo no soporta notificaciones'); return; }
+  let perm = Notification.permission;
+  if(perm === 'default'){
+    perm = await Notification.requestPermission();
+  }
+  if(perm === 'granted'){
+    showT('✓ Notificaciones activadas');
+    localStorage.setItem('notif_ok','1');
+  } else {
+    showT('Notificaciones no concedidas');
+  }
+}
+
+function notificar(titulo, cuerpo){
+  if(!('Notification' in window) || Notification.permission !== 'granted') return;
+  try{
+    const n = new Notification(titulo, {
+      body: cuerpo,
+      icon: undefined,
+      badge: undefined,
+      tag: 'pedidoschef',
+      renotify: true
+    });
+    setTimeout(()=>n.close(), 6000);
+  }catch(e){}
+}
+
+async function activarWakeLock(){
+  try{
+    if('wakeLock' in navigator){
+      wakeLockSentinel = await navigator.wakeLock.request('screen');
+      wakeLockSentinel.addEventListener('release', ()=>{ wakeLockSentinel=null; });
+    }
+  }catch(e){}
+}
+function liberarWakeLock(){
+  try{ wakeLockSentinel?.release(); }catch(e){}
+  wakeLockSentinel = null;
+}
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'visible' && document.getElementById('mo-albaran')?.classList.contains('on')){
+    activarWakeLock();
+  }
+});
+
+/** Comparte texto con la app nativa (WhatsApp, etc.) si el móvil lo permite */
+async function compartirTexto(texto, titulo){
+  if(navigator.share){
+    try{
+      await navigator.share({ title: titulo || 'Pedido', text: texto });
+      return true;
+    }catch(e){
+      if(e && e.name === 'AbortError') return false;
+    }
+  }
+  return false;
+}
+
 
 function calcStickyTop(){
   const h=(document.querySelector('header')?.offsetHeight||0)
@@ -2109,18 +2228,19 @@ function abrirAlbaran(){
   document.getElementById('mo-albaran').classList.add('on');
   document.body.style.overflow='hidden';
   document.getElementById('float-bar').style.display='none';
+  activarWakeLock();
 }
 function cerrarAlbaran(){
   document.getElementById('mo-albaran').classList.remove('on');
   document.body.style.overflow='';
   document.getElementById('float-bar').style.display='';
+  liberarWakeLock();
 }
 
 async function procesarAlbaran(input){
   const file = input.files[0];
   if(!file) return;
 
-  // Mostrar preview
   const previewUrl = URL.createObjectURL(file);
   document.getElementById('albaran-img').src = previewUrl;
   document.getElementById('albaran-preview').style.display='block';
@@ -2128,13 +2248,15 @@ async function procesarAlbaran(input){
   document.getElementById('albaran-loading').style.display='block';
   document.getElementById('albaran-resultado').style.display='none';
   document.getElementById('btn-confirmar-albaran').style.display='none';
+  document.getElementById('albaran-loading').innerHTML =
+    '<div style="margin-bottom:8px">🔍 Leyendo albarán...</div><div style="font-size:.65rem" id="ocr-status">Preparando imagen</div>';
 
   try {
-    // Convertir siempre a JPEG y comprimir (máx 1200px, calidad 0.85)
-    const base64 = await new Promise((res, rej) => {
+    // Comprimir imagen
+    const dataUrl = await new Promise((res, rej) => {
       const img = new Image();
       img.onload = () => {
-        const MAX = 1200;
+        const MAX = 1600;
         let w = img.width, h = img.height;
         if(w > MAX || h > MAX){
           if(w > h){ h = Math.round(h * MAX/w); w = MAX; }
@@ -2143,66 +2265,35 @@ async function procesarAlbaran(input){
         const canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = h;
         const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0,0,w,h);
         ctx.drawImage(img, 0, 0, w, h);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        res(dataUrl.split(',')[1]);
+        res(canvas.toDataURL('image/jpeg', 0.92));
       };
       img.onerror = () => rej(new Error('Error procesando imagen'));
       img.src = previewUrl;
     });
 
-    // Lista de proveedores para ayudar a la IA
-    const proveedoresConocidos = PROVEEDORES.map(p => p.nombre).join(', ');
-
-    const prompt = `Eres un asistente para un restaurante. Analiza este documento o nota y extrae información de productos.
-
-Proveedores conocidos: ${proveedoresConocidos}
-
-Extrae TODA la información visible. Aunque sea una nota manuscrita, un ticket o un albarán informal. Si no puedes leer algo, pon null. Si no hay proveedor claro, pon null en proveedor_id.
-
-Responde SOLO con JSON válido, sin texto adicional, sin comentarios:
-{
-  "proveedor": "nombre del proveedor o null",
-  "proveedor_id": "uno de: food, frutaseloy, serpeska, leikan, prodesco, cominport, tokyoya, jenquimica, kemikal, beeonfood, beran, trueworldfoods — o null",
-  "fecha": "DD/MM/YYYY o null",
-  "productos": [
-    {
-      "nombre": "nombre completo del producto",
-      "cantidad": 1,
-      "unidad": "kg, ud, bote, bolsa, etc",
-      "precio_unitario": numero_decimal o null
+    if(typeof Tesseract === 'undefined'){
+      throw new Error('OCR no cargado. Recarga la página e inténtalo de nuevo.');
     }
-  ]
-}`;
 
-    const WORKER_URL = 'https://floral-tooth-ceb4.jhonathanalexanderlopezvidal.workers.dev';
-
-    const response = await fetch(WORKER_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image_base64: base64, prompt })
+    const statusEl = document.getElementById('ocr-status');
+    const result = await Tesseract.recognize(dataUrl, 'spa+eng', {
+      logger: m => {
+        if(!statusEl) return;
+        if(m.status === 'recognizing text'){
+          statusEl.textContent = 'Leyendo texto... ' + Math.round((m.progress||0)*100) + '%';
+        } else if(m.status){
+          statusEl.textContent = m.status;
+        }
+      }
     });
 
-    if(!response.ok){
-      const errText = await response.text();
-      console.error('Worker error:', response.status, errText);
-      throw new Error(`Error ${response.status}: ${errText}`);
-    }
+    const texto = (result && result.data && result.data.text) ? result.data.text : '';
+    console.log('OCR texto:', texto);
 
-    const data = await response.json();
-    if(data.error) throw new Error(data.error);
-    const texto = data.text || data.result || data.content || '';
-    let clean = texto.replace(/```json|```/g,'').trim();
-    // Extraer JSON si viene rodeado de texto
-    const jsonMatch = clean.match(/\{[\s\S]*\}/);
-    if(jsonMatch) clean = jsonMatch[0];
-    try {
-      albaranDetectado = JSON.parse(clean);
-    } catch(parseErr) {
-      console.error('JSON parse fail:', clean);
-      throw new Error('No se pudo interpretar la respuesta de la IA');
-    }
-    if(!albaranDetectado.productos) albaranDetectado.productos = [];
+    albaranDetectado = parsearTextoAlbaran(texto);
     mostrarResultadoAlbaran(albaranDetectado);
 
   } catch(err) {
@@ -2212,9 +2303,134 @@ Responde SOLO con JSON válido, sin texto adicional, sin comentarios:
     document.getElementById('albaran-resultado').innerHTML =
       `<div style="color:var(--r);font-size:.78rem;padding:12px 0">
         ⚠ Error al procesar: ${err.message || 'Error desconocido'}<br>
-        <span style="font-size:.65rem;color:var(--d)">Comprueba tu conexión e inténtalo de nuevo.</span>
+        <span style="font-size:.65rem;color:var(--d)">Prueba con mejor luz, foto más cercana y texto legible.</span>
       </div>`;
   }
+}
+
+/** Parsea el texto OCR y extrae proveedor + productos + precios */
+function parsearTextoAlbaran(texto){
+  const lineas = (texto||'').split(/\\r?\\n/).map(l=>l.trim()).filter(l=>l.length>1);
+  const textoLower = (texto||'').toLowerCase();
+
+  // Detectar proveedor por nombre en el texto
+  let proveedor_id = null;
+  let proveedor = null;
+  let mejorScore = 0;
+  PROVEEDORES.forEach(p=>{
+    const nombre = p.nombre.toLowerCase();
+    const comercial = (p.comercial||'').toLowerCase();
+    // buscar coincidencia de palabras clave
+    const claves = nombre.split(/\\s+/).filter(w=>w.length>2);
+    let score = 0;
+    if(textoLower.includes(nombre)) score += 10;
+    if(comercial && textoLower.includes(comercial)) score += 8;
+    claves.forEach(c=>{ if(textoLower.includes(c)) score += 2; });
+    // ids cortos
+    if(textoLower.includes(p.id)) score += 5;
+    if(score > mejorScore){
+      mejorScore = score;
+      proveedor_id = p.id;
+      proveedor = p.nombre;
+    }
+  });
+  if(mejorScore < 2){ proveedor_id = null; proveedor = null; }
+
+  // Extraer fecha
+  let fecha = null;
+  const fechaMatch = texto.match(/(\\d{1,2})[\\/\\-\\.](\\d{1,2})[\\/\\-\\.](\\d{2,4})/);
+  if(fechaMatch) fecha = fechaMatch[0];
+
+  // Extraer productos: líneas con nombre + número (precio o cantidad)
+  const productos = [];
+  const precioRegex = /(\\d+[.,]\\d{2})|(\\d+[.,]\\d{1})|(\\d{2,})/g;
+
+  lineas.forEach(linea=>{
+    // Saltar cabeceras típicas
+    const low = linea.toLowerCase();
+    if(/^(total|subtotal|iva|base|fecha|cliente|albaran|albarán|factura|pagina|página|tel|cif|nif)/i.test(low)) return;
+    if(linea.length < 3) return;
+
+    // Buscar precios tipo 12,50 o 12.50 o enteros al final
+    const nums = [];
+    let m;
+    const re = /(\\d+[.,]\\d{2})|(\\b\\d{1,5}\\b)/g;
+    while((m = re.exec(linea)) !== null){
+      const raw = (m[1]||m[2]||'').replace(',', '.');
+      const val = parseFloat(raw);
+      if(!isNaN(val) && val > 0) nums.push({val, index: m.index, raw: m[0]});
+    }
+    if(!nums.length) return;
+
+    // El último número suele ser el precio (o el más grande con decimales)
+    let precio = null;
+    const conDec = nums.filter(n => String(n.raw).includes(',') || String(n.raw).includes('.'));
+    if(conDec.length){
+      precio = conDec[conDec.length-1].val;
+    } else if(nums.length){
+      // si solo hay enteros, el último puede ser precio sin decimales (ej: 499)
+      precio = nums[nums.length-1].val;
+    }
+
+    // Nombre = texto antes del primer número relevante
+    let nombre = linea;
+    if(nums.length){
+      nombre = linea.substring(0, nums[0].index).trim();
+    }
+    nombre = nombre.replace(/[\\*\\_\\-]+$/g,'').replace(/^\\d+[\\)\\.\\-]\\s*/,'').trim();
+    // limpiar unidades sueltas al final del nombre
+    if(nombre.length < 2) return;
+    if(/^(ud|kg|l|€|eur|unidades?)$/i.test(nombre)) return;
+
+    // cantidad: si hay varios números, el primero pequeño puede ser cantidad
+    let cantidad = 1;
+    let unidad = 'ud';
+    if(nums.length >= 2){
+      const primero = nums[0].val;
+      if(primero > 0 && primero < 500 && primero !== precio){
+        cantidad = primero;
+      }
+    }
+    // detectar unidad en la línea
+    if(/\\bkg\\b/i.test(linea)) unidad = 'kg';
+    else if(/\\b(l|litro|litros)\\b/i.test(linea)) unidad = 'l';
+    else if(/\\b(bote|botella|bolsa|caja|pack|bandeja|saco|garrafa|lata)\\b/i.test(linea)){
+      const um = linea.match(/\\b(bote|botella|bolsa|caja|pack|bandeja|saco|garrafa|lata)\\b/i);
+      if(um) unidad = um[1].toLowerCase();
+    }
+
+    productos.push({
+      nombre: nombre,
+      cantidad: cantidad,
+      unidad: unidad,
+      precio_unitario: precio
+    });
+  });
+
+  // Si no hay productos con el parser de líneas, intentar patrón "nombre precio" más suelto
+  if(!productos.length){
+    const globalRe = /([A-Za-zÁÉÍÓÚáéíóúÑñ0-9][A-Za-zÁÉÍÓÚáéíóúÑñ0-9\\s\\.\\/%\\-]{2,40}?)\\s+(\\d+[.,]\\d{2}|\\d{2,5})(?:\\s*€)?/g;
+    let gm;
+    while((gm = globalRe.exec(texto)) !== null){
+      const nom = gm[1].trim();
+      if(nom.length < 3) continue;
+      if(/^(total|iva|fecha|tel)/i.test(nom)) continue;
+      productos.push({
+        nombre: nom,
+        cantidad: 1,
+        unidad: 'ud',
+        precio_unitario: parseFloat(gm[2].replace(',','.'))
+      });
+    }
+  }
+
+  return {
+    proveedor: proveedor,
+    proveedor_id: proveedor_id,
+    fecha: fecha,
+    productos: productos,
+    texto_ocr: texto
+  };
 }
 
 function mostrarResultadoAlbaran(datos){
@@ -2385,7 +2601,10 @@ function confirmarAlbaran(){
   const msg = [];
   if(añadidos)    msg.push(`${añadidos} producto${añadidos>1?'s':''} añadido${añadidos>1?'s':''}`);
   if(actualizados) msg.push(`${actualizados} precio${actualizados>1?'s':''} actualizado${actualizados>1?'s':''}`);
-  showT('✓ ' + (msg.length ? msg.join(' · ') : 'Sin cambios'));
+  const textoOk = '✓ ' + (msg.length ? msg.join(' · ') : 'Sin cambios');
+  showT(textoOk);
+  notificar('Albarán procesado', textoOk);
+
 }
 
 
