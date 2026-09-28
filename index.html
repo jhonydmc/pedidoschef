@@ -1660,18 +1660,18 @@ async function enviarSiguiente(){
   } else {
     const waNum = getWa(prov);
     if(!waNum){ showT('⚠ Sin número de WhatsApp para '+prov.nombre); return; }
+    // Solo dígitos (sin + ni espacios) — obligatorio para wa.me
+    const phone = String(waNum).replace(/\D/g,'');
     let m=`_${RESTAURANTE.nombre}_\n_${RESTAURANTE.direccion}_\n_Pedido ${prov.nombre} · Entrega ${fmtS(fecha)}_\n\n`;
     its.forEach(p=>{const u=p.u.trim().toLowerCase();m+=`_*${p.n.toLowerCase()} (${p.u}) · ${Q[p.id]} ${u==='kg'?'kg':u==='l'?'l':'ud'}*_\n`;});
     m+=`\n_Entrega después de las 10:30h_`;
     if(notas)m+=`\n_${notas}_`;
-    // Preferir compartir nativo; si no, abrir WhatsApp
-    (async ()=>{
-      const compartido = await compartirTexto(m, 'Pedido '+prov.nombre);
-      if(!compartido){
-        window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(m)}`,'_blank');
-      }
-      try{ if(navigator.vibrate) navigator.vibrate(30); }catch(e){}
-    })();
+    // Abrir WhatsApp DIRECTO al chat del proveedor (mensaje listo → solo pulsar Enviar)
+    const texto = encodeURIComponent(m);
+    const url = `https://wa.me/${phone}?text=${texto}`;
+    // location.href abre la app de WhatsApp en el móvil con ese número
+    window.location.href = url;
+    try{ if(navigator.vibrate) navigator.vibrate(30); }catch(e){}
   }
 
   guardarPedidoEnBD(prov, its).catch(err=>{
