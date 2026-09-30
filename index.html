@@ -2252,48 +2252,52 @@ async function procesarAlbaran(input){
     '<div style="margin-bottom:8px">🔍 Leyendo albarán...</div><div style="font-size:.65rem" id="ocr-status">Preparando imagen</div>';
 
   try {
-    // Comprimir imagen
-    const dataUrl = await new Promise((res, rej) => {
-      const img = new Image();
-      img.onload = () => {
-        const MAX = 1600;
-        let w = img.width, h = img.height;
-        if(w > MAX || h > MAX){
-          if(w > h){ h = Math.round(h * MAX/w); w = MAX; }
-          else      { w = Math.round(w * MAX/h); h = MAX; }
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(0,0,w,h);
-        ctx.drawImage(img, 0, 0, w, h);
-        res(canvas.toDataURL('image/jpeg', 0.92));
-      };
-      img.onerror = () => rej(new Error('Error procesando imagen'));
-      img.src = previewUrl;
-    });
-
     if(typeof Tesseract === 'undefined'){
       throw new Error('OCR no cargado. Recarga la página e inténtalo de nuevo.');
     }
 
-    const statusEl = document.getElementById('ocr-status');
-    const result = await Tesseract.recognize(dataUrl, 'spa+eng', {
-      logger: m => {
-        if(!statusEl) return;
-        if(m.status === 'recognizing text'){
-          statusEl.textContent = 'Leyendo texto... ' + Math.round((m.progress||0)*100) + '%';
-        } else if(m.status){
-          statusEl.textContent = m.status;
-        }
-      }
+    // Cargar imagen en canvas
+    const img = await new Promise((res, rej) => {
+      const i = new Image();
+      i.onload = () => res(i);
+      i.onerror = () => rej(new Error('Error cargando imagen'));
+      i.src = previewUrl;
     });
 
-    const texto = (result && result.data && result.data.text) ? result.data.text : '';
-    console.log('OCR texto:', texto);
+    const statusEl = document.getElementById('ocr-status');
+    const angulos = [0, 90, 270, 180];
+    let mejor = { texto: '', productos: [], score: -1, angulo: 0 };
 
-    albaranDetectado = parsearTextoAlbaran(texto);
+    for(let ai = 0; ai < angulos.length; ai++){
+      const angulo = angulos[ai];
+      if(statusEl) statusEl.textContent = 'Leyendo' + (angulo ? ' (giro '+angulo+'°)' : '') + '...';
+
+      const dataUrl = rotarYComprimir(img, angulo, 1800);
+      const result = await Tesseract.recognize(dataUrl, 'spa+eng', {
+        logger: m => {
+          if(!statusEl) return;
+          if(m.status === 'recognizing text'){
+            statusEl.textContent = 'Leyendo' + (angulo ? ' '+angulo+'°' : '') + '... ' + Math.round((m.progress||0)*100) + '%';
+          }
+        }
+      });
+      const texto = (result && result.data && result.data.text) ? result.data.text : '';
+      const parsed = parsearTextoAlbaran(texto);
+      // Puntuación: más productos + proveedor detectado + texto largo
+      const score = (parsed.productos||[]).length * 100
+        + (parsed.proveedor_id ? 20 : 0)
+        + Math.min((texto||'').length / 80, 5);
+      console.log('OCR ángulo', angulo, 'score', score, 'prods', (parsed.productos||[]).length, texto.slice(0,120));
+      if(score > mejor.score){
+        mejor = { texto, productos: parsed.productos, score, angulo, parsed };
+      }
+      // Si ya tenemos productos suficientes, no hace falta seguir rotando
+      if((parsed.productos||[]).length >= 3) break;
+    }
+
+    albaranDetectado = mejor.parsed || parsearTextoAlbaran(mejor.texto);
+    albaranDetectado.texto_ocr = mejor.texto;
+    albaranDetectado._angulo = mejor.angulo;
     mostrarResultadoAlbaran(albaranDetectado);
 
   } catch(err) {
@@ -2303,134 +2307,244 @@ async function procesarAlbaran(input){
     document.getElementById('albaran-resultado').innerHTML =
       `<div style="color:var(--r);font-size:.78rem;padding:12px 0">
         ⚠ Error al procesar: ${err.message || 'Error desconocido'}<br>
-        <span style="font-size:.65rem;color:var(--d)">Prueba con mejor luz, foto más cercana y texto legible.</span>
+        <span style="font-size:.65rem;color:var(--d)">Prueba con mejor luz, foto más cercana y el albarán bien orientado (texto horizontal).</span>
       </div>`;
   }
 }
 
+/** Rota y comprime la imagen para OCR */
+function rotarYComprimir(img, grados, maxSide){
+  const rad = grados * Math.PI / 180;
+  let w = img.width, h = img.height;
+  // escala
+  const scale = Math.min(1, maxSide / Math.max(w, h));
+  w = Math.round(w * scale);
+  h = Math.round(h * scale);
+  const canvas = document.createElement('canvas');
+  if(grados % 180 === 0){
+    canvas.width = w; canvas.height = h;
+  } else {
+    canvas.width = h; canvas.height = w;
+  }
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(canvas.width/2, canvas.height/2);
+  ctx.rotate(rad);
+  ctx.drawImage(img, -w/2, -h/2, w, h);
+  ctx.restore();
+  // contraste ligero ayuda al OCR
+  try {
+    const id = ctx.getImageData(0,0,canvas.width,canvas.height);
+    const d = id.data;
+    for(let i=0;i<d.length;i+=4){
+      // escala de grises + contraste
+      let g = 0.3*d[i] + 0.59*d[i+1] + 0.11*d[i+2];
+      g = g < 128 ? g * 0.85 : Math.min(255, g * 1.15);
+      d[i]=d[i+1]=d[i+2]=g;
+    }
+    ctx.putImageData(id,0,0);
+  } catch(e){}
+  return canvas.toDataURL('image/jpeg', 0.95);
+}
+
 /** Parsea el texto OCR y extrae proveedor + productos + precios */
-function parsearTextoAlbaran(texto){
-  const lineas = (texto||'').split(/\\r?\\n/).map(l=>l.trim()).filter(l=>l.length>1);
-  const textoLower = (texto||'').toLowerCase();
+function parsearTextoAlbaran(texto, forcedProvId){
+  const raw = texto || '';
+  const textoLower = raw.toLowerCase().replace(/\s+/g, ' ');
+  const lineas = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 1);
 
-  // Detectar proveedor por nombre en el texto
-  let proveedor_id = null;
-  let proveedor = null;
-  let mejorScore = 0;
-  PROVEEDORES.forEach(p=>{
-    const nombre = p.nombre.toLowerCase();
-    const comercial = (p.comercial||'').toLowerCase();
-    // buscar coincidencia de palabras clave
-    const claves = nombre.split(/\\s+/).filter(w=>w.length>2);
+  // ── Proveedor ──
+  let proveedor_id = null, proveedor = null, mejorScore = 0;
+  const alias = {
+    frutaseloy: ['frutas eloy','eloy','frutaseloy'],
+    food: ['+food','food'],
+    serpeska: ['serpeska'],
+    tokyoya: ['tokyo ya','tokyoya','tokyo'],
+    leikan: ['leikan'],
+    prodesco: ['prodesco'],
+    cominport: ['cominport'],
+    jenquimica: ['jen quimica','jenquimica'],
+    kemikal: ['kemikal'],
+    beeonfood: ['beef on food','beeonfood'],
+    beran: ['beran'],
+    trueworldfoods: ['true world','trueworld']
+  };
+  PROVEEDORES.forEach(p => {
     let score = 0;
-    if(textoLower.includes(nombre)) score += 10;
-    if(comercial && textoLower.includes(comercial)) score += 8;
-    claves.forEach(c=>{ if(textoLower.includes(c)) score += 2; });
-    // ids cortos
-    if(textoLower.includes(p.id)) score += 5;
-    if(score > mejorScore){
-      mejorScore = score;
-      proveedor_id = p.id;
-      proveedor = p.nombre;
-    }
+    const n = p.nombre.toLowerCase();
+    if(textoLower.includes(n)) score += 12;
+    if(p.comercial && textoLower.includes(p.comercial.toLowerCase())) score += 10;
+    (alias[p.id]||[]).forEach(a => { if(textoLower.includes(a)) score += 8; });
+    n.split(/\s+/).filter(w => w.length > 2).forEach(w => { if(textoLower.includes(w)) score += 2; });
+    if(score > mejorScore){ mejorScore = score; proveedor_id = p.id; proveedor = p.nombre; }
   });
-  if(mejorScore < 2){ proveedor_id = null; proveedor = null; }
+  if(mejorScore < 3){ proveedor_id = null; proveedor = null; }
+  if(forcedProvId){
+    const fp = PROVEEDORES.find(p => p.id === forcedProvId);
+    if(fp){ proveedor_id = fp.id; proveedor = fp.nombre; }
+  }
 
-  // Extraer fecha
   let fecha = null;
-  const fechaMatch = texto.match(/(\\d{1,2})[\\/\\-\\.](\\d{1,2})[\\/\\-\\.](\\d{2,4})/);
-  if(fechaMatch) fecha = fechaMatch[0];
+  const fm = raw.match(/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);
+  if(fm) fecha = fm[0];
 
-  // Extraer productos: líneas con nombre + número (precio o cantidad)
   const productos = [];
-  const precioRegex = /(\\d+[.,]\\d{2})|(\\d+[.,]\\d{1})|(\\d{2,})/g;
+  const vistos = new Set();
 
-  lineas.forEach(linea=>{
-    // Saltar cabeceras típicas
-    const low = linea.toLowerCase();
-    if(/^(total|subtotal|iva|base|fecha|cliente|albaran|albarán|factura|pagina|página|tel|cif|nif)/i.test(low)) return;
-    if(linea.length < 3) return;
-
-    // Buscar precios tipo 12,50 o 12.50 o enteros al final
-    const nums = [];
-    let m;
-    const re = /(\\d+[.,]\\d{2})|(\\b\\d{1,5}\\b)/g;
-    while((m = re.exec(linea)) !== null){
-      const raw = (m[1]||m[2]||'').replace(',', '.');
-      const val = parseFloat(raw);
-      if(!isNaN(val) && val > 0) nums.push({val, index: m.index, raw: m[0]});
-    }
-    if(!nums.length) return;
-
-    // El último número suele ser el precio (o el más grande con decimales)
-    let precio = null;
-    const conDec = nums.filter(n => String(n.raw).includes(',') || String(n.raw).includes('.'));
-    if(conDec.length){
-      precio = conDec[conDec.length-1].val;
-    } else if(nums.length){
-      // si solo hay enteros, el último puede ser precio sin decimales (ej: 499)
-      precio = nums[nums.length-1].val;
-    }
-
-    // Nombre = texto antes del primer número relevante
-    let nombre = linea;
-    if(nums.length){
-      nombre = linea.substring(0, nums[0].index).trim();
-    }
-    nombre = nombre.replace(/[\\*\\_\\-]+$/g,'').replace(/^\\d+[\\)\\.\\-]\\s*/,'').trim();
-    // limpiar unidades sueltas al final del nombre
-    if(nombre.length < 2) return;
-    if(/^(ud|kg|l|€|eur|unidades?)$/i.test(nombre)) return;
-
-    // cantidad: si hay varios números, el primero pequeño puede ser cantidad
-    let cantidad = 1;
-    let unidad = 'ud';
-    if(nums.length >= 2){
-      const primero = nums[0].val;
-      if(primero > 0 && primero < 500 && primero !== precio){
-        cantidad = primero;
-      }
-    }
-    // detectar unidad en la línea
-    if(/\\bkg\\b/i.test(linea)) unidad = 'kg';
-    else if(/\\b(l|litro|litros)\\b/i.test(linea)) unidad = 'l';
-    else if(/\\b(bote|botella|bolsa|caja|pack|bandeja|saco|garrafa|lata)\\b/i.test(linea)){
-      const um = linea.match(/\\b(bote|botella|bolsa|caja|pack|bandeja|saco|garrafa|lata)\\b/i);
-      if(um) unidad = um[1].toLowerCase();
-    }
-
+  function addProd(nombre, cantidad, unidad, precio){
+    nombre = (nombre||'').replace(/\s+/g,' ').trim();
+    if(nombre.length < 3) return;
+    if(/^(total|subtotal|iva|base|fecha|cliente|albaran|albarán|factura|documento|lote|serie|cantidad|precio|importe|referencia|origen|descripcion|descripción|forma|pago|ud|kg|kilo|bolsa|bandeja|€)$/i.test(nombre)) return;
+    if(/^\d+$/.test(nombre)) return;
+    const key = nombre.toLowerCase();
+    if(vistos.has(key)) return;
+    vistos.add(key);
     productos.push({
-      nombre: nombre,
-      cantidad: cantidad,
-      unidad: unidad,
-      precio_unitario: precio
+      nombre,
+      cantidad: cantidad > 0 ? cantidad : 1,
+      unidad: unidad || 'ud',
+      precio_unitario: (precio != null && !isNaN(precio) && precio > 0) ? precio : null
+    });
+  }
+
+  function parsePrecio(s){
+    if(!s) return null;
+    const v = parseFloat(String(s).replace(',', '.').replace(/[^0-9.]/g,''));
+    return (!isNaN(v) && v > 0 && v < 9999) ? v : null;
+  }
+
+  /**
+   * Siempre PRECIO UNITARIO (€/kg, €/ud…), NUNCA el importe total de la línea.
+   * 3 kg × 2,00 €/kg = 6,00 €  → guardar 2,00
+   * 0,25 kg × 3,17 €/kg = 0,79 € → guardar 3,17
+   */
+  function resolverPrecioUnitario(cantidad, precios){
+    const nums = (precios||[]).filter(p => p != null && !isNaN(p) && p > 0);
+    if(!nums.length) return null;
+    if(nums.length === 1) return nums[0];
+    const q = (cantidad && cantidad > 0) ? cantidad : null;
+    if(q){
+      for(let i=0;i<nums.length;i++){
+        for(let j=0;j<nums.length;j++){
+          if(i===j) continue;
+          if(Math.abs(nums[i] * q - nums[j]) < 0.08) return nums[i];
+        }
+      }
+      const max = Math.max(...nums);
+      const calc = max / q;
+      if(calc > 0.05 && calc < 500) return Math.round(calc * 100) / 100;
+    }
+    const tipicos = nums.filter(n => n >= 0.3 && n <= 80);
+    if(tipicos.length) return Math.min(...tipicos);
+    return Math.min(...nums);
+  }
+
+  function normalizarUnidad(u){
+    if(!u) return 'ud';
+    u = u.toLowerCase();
+    if(u.startsWith('kil') || u === 'kg') return 'kg';
+    if(u.startsWith('bols')) return 'bolsa';
+    if(u.startsWith('band')) return 'bandeja';
+    if(u.startsWith('caj')) return 'caja';
+    if(u.startsWith('bot')) return 'bote';
+    if(u === 'l' || u.startsWith('litr')) return 'l';
+    return u;
+  }
+
+  // A) Catálogo del proveedor
+  const prov = proveedor_id ? PROVEEDORES.find(p => p.id === proveedor_id) : null;
+  const catalogo = prov ? prov.productos : [];
+  const pools = catalogo.length ? [catalogo] : PROVEEDORES.map(p => p.productos);
+
+  pools.forEach(lista => {
+    lista.forEach(prod => {
+      const nom = prod.n.toLowerCase().trim();
+      const palabras = nom.split(/\s+/).filter(w => w.length >= 4 && !/^(extra|bolsa|pack|ud|kg)$/i.test(w));
+      if(!palabras.length) return;
+      let hits = 0;
+      palabras.forEach(w => { if(textoLower.includes(w)) hits++; });
+      const ratio = hits / palabras.length;
+      const distintiva = palabras.some(w => w.length >= 7 && textoLower.includes(w));
+      if(ratio < 0.4 && hits < 1) return;
+      if(!distintiva && hits < 2 && ratio < 0.6) return;
+
+      const idx = textoLower.indexOf(palabras[0]);
+      if(idx < 0) return;
+      const fragmento = raw.slice(Math.max(0, idx - 20), Math.min(raw.length, idx + nom.length + 100));
+
+      let cantidad = 1, unidad = prod.u || 'ud';
+      const cu = fragmento.match(/(\d+[.,]\d{1,3}|\d+)\s*(KILO|KG|BOLSA|BANDEJA|CAJA|BOTE|UD|UNID|L)/i);
+      if(cu){
+        cantidad = parseFloat(cu[1].replace(',','.')) || 1;
+        unidad = normalizarUnidad(cu[2]);
+      }
+
+      const preciosFrag = [...fragmento.matchAll(/(\d{1,3}[.,]\d{2})/g)].map(m => parsePrecio(m[1])).filter(Boolean);
+      const precio = resolverPrecioUnitario(cantidad, preciosFrag);
+      addProd(prod.n, cantidad, unidad, precio);
     });
   });
 
-  // Si no hay productos con el parser de líneas, intentar patrón "nombre precio" más suelto
-  if(!productos.length){
-    const globalRe = /([A-Za-zÁÉÍÓÚáéíóúÑñ0-9][A-Za-zÁÉÍÓÚáéíóúÑñ0-9\\s\\.\\/%\\-]{2,40}?)\\s+(\\d+[.,]\\d{2}|\\d{2,5})(?:\\s*€)?/g;
+  // B) Líneas tipo tabla: Descripción + cant + unidad + Pr.Ud + Importe
+  lineas.forEach(linea => {
+    const low = linea.toLowerCase();
+    if(/referencia|origen|descripci[oó]n|lote|cantidad|importe|total|iva|documento|fecha env/i.test(low)
+       && !/[a-záéíóúñ]{5,}/i.test(low.replace(/referencia|origen|descripcion|descripción|lote|cantidad|importe/gi,''))) return;
+
+    // nombre + cantidad + unidad + precio [+ importe]
+    const m = linea.match(
+      /([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ0-9\s\.\/\%\-]{4,55}?)\s+(\d+[.,]\d{1,3}|\d+)\s*(KILO|KG|BOLSA|BANDEJA|CAJA|BOTE|UD|UNID|L)?\s+(\d+[.,]\d{2})(?:\s+\d+\s*%?)?\s*(\d+[.,]\d{2})?/i
+    );
+    if(m){
+      const cant = parseFloat(m[2].replace(',','.')) || 1;
+      const und = normalizarUnidad(m[3]);
+      const precio = resolverPrecioUnitario(cant, [parsePrecio(m[4]), parsePrecio(m[5])].filter(Boolean));
+      addProd(m[1].trim(), cant, und, precio);
+      return;
+    }
+
+    const m2 = linea.match(/([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ\s]{5,40}?)\s+(\d{1,3}[.,]\d{2})\s*$/);
+    if(m2){
+      addProd(m2[1].trim(), 1, 'ud', parsePrecio(m2[2]));
+      return;
+    }
+
+    const precios = [...linea.matchAll(/(\d{1,3}[.,]\d{2})/g)].map(x => parsePrecio(x[1])).filter(Boolean);
+    if(precios.length && /[A-Za-záéíóúñÁÉÍÓÚÑ]{4,}/.test(linea)){
+      const nombre = linea
+        .replace(/\b\d{5,}\b/g,'')
+        .replace(/\b\d{1,3}[.,]\d{2}\b/g,'')
+        .replace(/\b(KILO|KG|BOLSA|BANDEJA|CAJA|ES|UD)\b/gi,'')
+        .replace(/\s+/g,' ')
+        .trim();
+      if(nombre.length >= 4){
+        let und = 'ud', cant = 1;
+        if(/kilo|\bkg\b/i.test(linea)) und = 'kg';
+        else if(/bolsa/i.test(linea)) und = 'bolsa';
+        else if(/bandeja/i.test(linea)) und = 'bandeja';
+        const cq = linea.match(/(\d+[.,]\d{1,3}|\d+)\s*(KILO|KG|BOLSA|BANDEJA)/i);
+        if(cq) cant = parseFloat(cq[1].replace(',','.')) || 1;
+        addProd(nombre, cant, und, resolverPrecioUnitario(cant, precios));
+      }
+    }
+  });
+
+  // C) Fallback global
+  if(productos.length < 2){
+    const reGlobal = /([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]{6,45})\s+(\d+[.,]\d{2}|\d+)\s*(KILO|KG|BOLSA|BANDEJA)?[^\d]{0,20}(\d{1,3}[.,]\d{2})/gi;
     let gm;
-    while((gm = globalRe.exec(texto)) !== null){
-      const nom = gm[1].trim();
-      if(nom.length < 3) continue;
-      if(/^(total|iva|fecha|tel)/i.test(nom)) continue;
-      productos.push({
-        nombre: nom,
-        cantidad: 1,
-        unidad: 'ud',
-        precio_unitario: parseFloat(gm[2].replace(',','.'))
-      });
+    while((gm = reGlobal.exec(raw)) !== null){
+      const cant = parseFloat(String(gm[2]).replace(',','.')) || 1;
+      const und = normalizarUnidad(gm[3]);
+      const zona = raw.slice(gm.index, gm.index + gm[0].length + 20);
+      const mas = [...zona.matchAll(/(\d{1,3}[.,]\d{2})/g)].map(x => parsePrecio(x[1])).filter(Boolean);
+      addProd(gm[1].trim(), cant, und, resolverPrecioUnitario(cant, mas));
     }
   }
 
-  return {
-    proveedor: proveedor,
-    proveedor_id: proveedor_id,
-    fecha: fecha,
-    productos: productos,
-    texto_ocr: texto
-  };
+  return { proveedor, proveedor_id, fecha, productos, texto_ocr: raw };
 }
 
 function mostrarResultadoAlbaran(datos){
@@ -2527,13 +2641,39 @@ function mostrarResultadoAlbaran(datos){
       html += `</div>`;
     }
   } else {
-    html += '<div style="color:var(--d);font-size:.78rem;padding:8px 0">No se detectaron productos. Intenta con mejor iluminación o otra foto.</div>';
+    html += `<div style="color:var(--d);font-size:.78rem;padding:8px 0">
+      No se detectaron productos automáticamente.<br>
+      <span style="font-size:.65rem">Consejo: foto con el texto <b>horizontal</b>, buena luz y de cerca.</span>
+    </div>`;
+    if(datos.texto_ocr && datos.texto_ocr.trim()){
+      html += `<details style="margin-top:10px">
+        <summary style="font-size:.7rem;color:var(--a);cursor:pointer">Ver texto leído por la cámara</summary>
+        <pre style="font-size:.6rem;color:var(--d);white-space:pre-wrap;background:var(--bg);padding:10px;border-radius:8px;margin-top:6px;max-height:140px;overflow:auto">${datos.texto_ocr.replace(/</g,'&lt;')}</pre>
+      </details>`;
+    }
+
   }
 
   cont.innerHTML = html;
 
   if(datos.productos && datos.productos.length){
     document.getElementById('btn-confirmar-albaran').style.display='block';
+  } else {
+    document.getElementById('btn-confirmar-albaran').style.display='none';
+  }
+
+  // Si cambia el proveedor, re-analizar el texto OCR con ese catálogo
+  const sel = document.getElementById('albaran-prov-select');
+  if(sel){
+    sel.onchange = () => {
+      if(!albaranDetectado || !albaranDetectado.texto_ocr) return;
+      const provId = sel.value;
+      if(!provId) return;
+      const re = parsearTextoAlbaran(albaranDetectado.texto_ocr, provId);
+      re.texto_ocr = albaranDetectado.texto_ocr;
+      albaranDetectado = re;
+      mostrarResultadoAlbaran(re);
+    };
   }
 }
 
